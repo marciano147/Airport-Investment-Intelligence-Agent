@@ -29,7 +29,7 @@ load_dotenv()
 # LLM configuration lives here. The compute layer stays in `tools.py`,
 # `data_loader.py`, and `scoring.py`, so the model routes questions but does not
 # invent rankings or calculate scores itself.
-MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
 CHECKPOINTER = MemorySaver()
 
 # Tools are registered once and reused by Streamlit, CLI smoke tests, and direct
