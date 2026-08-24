@@ -11,9 +11,10 @@ The app uses deterministic scoring for ranking and an LLM only for conversation,
 - Hermes-style markdown context files
 - Deterministic scoring breakdown
 - Cached public airport data
+- Runway-aware utilization proxy
 - Live FAA NAS delay status where available
 - LangSmith tracing hooks
-- Unit tests for scoring
+- Unit tests for scoring and data assembly
 
 ## Quick Start
 
@@ -48,15 +49,17 @@ Every tool call and LLM step will appear in the LangSmith project.
 
 ## Data Sources
 
-- Airport metadata: OurAirports US CSV cache.
-- Passenger metrics: cached FAA 2024 commercial-service passenger boarding/enplanement metrics.
+- Airport metadata and runway counts: OurAirports CSV cache.
+- Passenger metrics: cached FAA 2024 commercial-service passenger boarding/enplanement workbook.
 - Congestion: live FAA NAS airport status feed where available.
 
-The checked-in CSVs make the one-day demo reliable. Refresh logic is included for airport metadata; enplanement refresh should be reviewed when FAA workbook formats change.
+The checked-in CSVs make the one-day demo reliable. Refresh logic is included for airport and runway metadata; enplanement refresh should be reviewed when FAA workbook formats change.
 
 ## Example Questions
 
-- Rank the top 5 New England airports for terminal expansion.
-- Compare BOS and BDL for capacity investment potential.
+- Rank the top 5 US airports for terminal expansion.
+- Rank California airports for capacity investment potential.
+- Which airports in New England are strong candidates?
+- Compare LAX and SNA congestion levels.
 - Why did the top airport score higher than the others?
 - What assumptions should I know before using this ranking?

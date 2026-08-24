@@ -9,7 +9,12 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
 from prompts import load_context
-from tools import get_airport_info, get_congestion, get_passenger_metrics, rank_airports_for_expansion
+from tools import (
+    get_airport_info,
+    get_congestion,
+    get_passenger_metrics,
+    rank_airports_for_expansion,
+)
 
 
 load_dotenv()
@@ -40,4 +45,8 @@ def get_agent():
     return build_agent()
 
 
-agent = build_agent() if os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_ADMIN_KEY") else None
+agent = (
+    build_agent()
+    if os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_ADMIN_KEY")
+    else None
+)

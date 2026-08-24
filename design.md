@@ -12,7 +12,7 @@ The agent must rank airports with deterministic logic, explain the reasoning, sh
 - `agent.py`: LangGraph ReAct agent using OpenAI chat models.
 - `tools.py`: LangChain tools for airport info, congestion, passenger metrics, and ranking.
 - `scoring.py`: deterministic scoring formula.
-- `data_loader.py`: cached public data loading and refresh helpers.
+- `data_loader.py`: cached public data loading, region mapping, and ranking candidate assembly.
 - `context/*.md`: Hermes-style behavioral context.
 
 The LLM does not decide rankings. It calls tools, then explains deterministic outputs.
@@ -27,9 +27,9 @@ Composite = (Congestion * 0.35) + (Growth * 0.30) + (Utilization * 0.25) + (Seco
 
 Each component is normalized to 0-100.
 
-- Congestion: live FAA delay/advisory proxy where available.
-- Growth: year-over-year passenger growth, normalized from -5% to +15%.
-- Utilization: 2024 enplanements relative to the largest airport in the selected region.
+- Congestion: live FAA delay/advisory proxy where available, normalized from 0 to 60 minutes.
+- Growth: year-over-year passenger growth, normalized from -5% to +20%.
+- Utilization: 2024 enplanements per runway relative to the selected region.
 - Secondary: inverse size proxy for non-dominant market opportunity.
 
 ## Data Sources & Limitations
@@ -38,6 +38,7 @@ Each component is normalized to 0-100.
 - FAA passenger boarding data is the target source for passenger metrics, but it has reporting lag.
 - FAA NAS status is live, but active advisories are sparse and not a complete congestion model.
 - The included enplanement CSV is a cache from the FAA 2024 commercial-service workbook and should be refreshed before production use.
+- Region support covers major US airports by default, named prototype regions, and state-code filters.
 
 ## Hermes-Style Context System
 
@@ -66,7 +67,6 @@ This keeps agent behavior editable without changing code.
 
 ## Assumptions & Uncertainty
 
-- New England means ME, NH, VT, MA, RI, and CT.
 - Long-haul share is not modeled in v1.
 - Unmet demand is a proxy.
 - This is not a full financial model.

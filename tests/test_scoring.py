@@ -1,13 +1,13 @@
-from scoring import calculate_scores, normalize, rank_airports
+from scoring import calculate_scores, format_ranking, normalize, rank_airports
 
 
 def test_calculate_scores_uses_required_weights():
     scores = calculate_scores(
         {
-            "delay_score": 100,
-            "yoy_growth": 0.15,
-            "utilization": 1,
-            "secondary": 1,
+            "delay_minutes": 60,
+            "yoy_growth": 20,
+            "utilization": 95,
+            "secondary": 100,
         }
     )
 
@@ -18,21 +18,23 @@ def test_calculate_scores_uses_required_weights():
     assert scores["secondary"] == 100.0
 
 
-def test_missing_fields_default_to_zero():
-    assert calculate_scores({}) == {
-        "composite": 0.0,
-        "congestion": 0.0,
-        "growth": 0.0,
-        "utilization": 0.0,
-        "secondary": 0.0,
+def test_defaults_are_explicit_scoring_fallbacks():
+    scores = calculate_scores({})
+
+    assert scores == {
+        "composite": 34.7,
+        "congestion": 25.0,
+        "growth": 32.0,
+        "utilization": 45.5,
+        "secondary": 50.0,
     }
 
 
 def test_ranking_order_and_top_n():
     airports = [
-        {"iata": "LOW", "delay_score": 10, "yoy_growth": 0.00, "utilization": 0.4, "secondary": 0.2},
-        {"iata": "HIGH", "delay_score": 90, "yoy_growth": 0.12, "utilization": 0.9, "secondary": 0.8},
-        {"iata": "MID", "delay_score": 50, "yoy_growth": 0.04, "utilization": 0.6, "secondary": 0.6},
+        {"iata": "LOW", "delay_minutes": 5, "yoy_growth": 0, "utilization": 50, "secondary": 20},
+        {"iata": "HIGH", "delay_minutes": 55, "yoy_growth": 18, "utilization": 92, "secondary": 80},
+        {"iata": "MID", "delay_minutes": 30, "yoy_growth": 8, "utilization": 75, "secondary": 60},
     ]
 
     ranked = rank_airports(airports, top_n=2)
@@ -43,7 +45,27 @@ def test_ranking_order_and_top_n():
 
 def test_normalize_bounds():
     assert normalize(-1) == 0.0
-    assert normalize(2) == 2.0
+    assert normalize(50) == 50.0
     assert normalize(200) == 100.0
-    assert normalize(0.5) == 50.0
-    assert normalize(0.15, mode="growth") == 100.0
+    assert normalize(20, -5, 20) == 100.0
+    assert normalize(3, -5, 20) == 32.0
+
+
+def test_format_ranking_includes_full_breakdown():
+    table = format_ranking(
+        [
+            {
+                "iata": "BOS",
+                "name": "Boston Logan International Airport",
+                "composite": 50.0,
+                "congestion": 10.0,
+                "growth": 20.0,
+                "utilization": 30.0,
+                "secondary": 40.0,
+            }
+        ]
+    )
+
+    assert "Composite" in table
+    assert "Secondary" in table
+    assert "BOS" in table

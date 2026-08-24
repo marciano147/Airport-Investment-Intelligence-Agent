@@ -1,11 +1,520 @@
-iata,year,enplanements,prior_year_enplanements,yoy_growth,source
-BOS,2024,21090721,19962678,0.0565,FAA 2024 commercial service enplanements workbook
-BDL,2024,3285194,3122212,0.0522,FAA 2024 commercial service enplanements workbook
-PVD,2024,1984916,1732909,0.1454,FAA 2024 commercial service enplanements workbook
-MHT,2024,633257,645158,-0.0184,FAA 2024 commercial service enplanements workbook
-PWM,2024,1221913,1114714,0.0962,FAA 2024 commercial service enplanements workbook
-BTV,2024,670636,649557,0.0325,FAA 2024 commercial service enplanements workbook
-BGR,2024,376456,357301,0.0536,FAA 2024 commercial service enplanements workbook
-ORH,2024,112872,104747,0.0776,FAA 2024 commercial service enplanements workbook
-HVN,2024,589409,490255,0.2022,FAA 2024 commercial service enplanements workbook
-ACK,2024,154173,137664,0.1199,FAA 2024 commercial service enplanements workbook
+iata,state,city,airport_name,year,enplanements,prior_year_enplanements,yoy_growth,source
+ATL,GA,Atlanta,Hartsfield/Jackson Atlanta International,2024,52511402,50950068,3.06,FAA 2024 commercial service enplanements workbook
+DFW,TX,Fort Worth,Dallas-Fort Worth International,2024,42351316,39246212,7.91,FAA 2024 commercial service enplanements workbook
+DEN,CO,Denver,Denver International,2024,40012895,37863967,5.68,FAA 2024 commercial service enplanements workbook
+ORD,IL,Chicago,Chicago O'Hare International,2024,38575693,35843104,7.62,FAA 2024 commercial service enplanements workbook
+LAX,CA,Los Angeles,Los Angeles International,2024,37760834,40956673,-7.8,FAA 2024 commercial service enplanements workbook
+JFK,NY,New York,John F Kennedy International,2024,31466102,30804355,2.15,FAA 2024 commercial service enplanements workbook
+CLT,NC,Charlotte,Charlotte/Douglas International,2024,28523822,25896224,10.15,FAA 2024 commercial service enplanements workbook
+LAS,NV,Las Vegas,Harry Reid International,2024,28244966,27896199,1.25,FAA 2024 commercial service enplanements workbook
+MCO,FL,Orlando,Orlando International,2024,27859783,28033205,-0.62,FAA 2024 commercial service enplanements workbook
+MIA,FL,Miami,Miami International,2024,26588002,24717048,7.57,FAA 2024 commercial service enplanements workbook
+PHX,AZ,Phoenix,Phoenix Sky Harbor International,2024,25595723,23880504,7.18,FAA 2024 commercial service enplanements workbook
+SEA,WA,Seattle,Seattle-Tacoma International,2024,25414592,24594210,3.34,FAA 2024 commercial service enplanements workbook
+SFO,CA,San Francisco International Airport,San Francisco International,2024,25078968,24191159,3.67,FAA 2024 commercial service enplanements workbook
+EWR,NJ,Newark,Newark Liberty International,2024,24544320,24575320,-0.13,FAA 2024 commercial service enplanements workbook
+IAH,TX,Houston,George Bush Intcntl/Houston,2024,23349157,22228844,5.04,FAA 2024 commercial service enplanements workbook
+BOS,MA,Boston,General Edward Lawrence Logan International,2024,21090721,19962678,5.65,FAA 2024 commercial service enplanements workbook
+MSP,MN,Minneapolis,Minneapolis-St Paul International/Wold-Chamberlain,2024,18054481,17019128,6.08,FAA 2024 commercial service enplanements workbook
+FLL,FL,Fort Lauderdale,Fort Lauderdale/Hollywood International,2024,17096131,17063063,0.19,FAA 2024 commercial service enplanements workbook
+LGA,NY,New York,Laguardia,2024,16715567,16173073,3.35,FAA 2024 commercial service enplanements workbook
+DTW,MI,Detroit,Detroit Metro Wayne County,2024,16110696,15378601,4.76,FAA 2024 commercial service enplanements workbook
+PHL,PA,Philadelphia,Philadelphia International,2024,15102261,13658669,10.57,FAA 2024 commercial service enplanements workbook
+SLC,UT,Salt Lake City,Salt Lake City International,2024,13543570,12905368,4.95,FAA 2024 commercial service enplanements workbook
+BWI,MD,Glen Burnie,Baltimore/Washington International Thurgood Marshall,2024,13221461,12849721,2.89,FAA 2024 commercial service enplanements workbook
+IAD,VA,Dulles,Washington Dulles International,2024,13003234,12073571,7.7,FAA 2024 commercial service enplanements workbook
+SAN,CA,San Diego,San Diego International,2024,12780013,12190183,4.84,FAA 2024 commercial service enplanements workbook
+DCA,VA,Arlington,Ronald Reagan Washington Ntl,2024,12750892,12365030,3.12,FAA 2024 commercial service enplanements workbook
+TPA,FL,Tampa,Tampa International,2024,12075591,11677632,3.41,FAA 2024 commercial service enplanements workbook
+BNA,TN,Nashville,Nashville International,2024,12058688,11227243,7.41,FAA 2024 commercial service enplanements workbook
+AUS,TX,Austin,Austin-Bergstrom International,2024,10678073,10833443,-1.43,FAA 2024 commercial service enplanements workbook
+HNL,HI,Honolulu,Daniel K Inouye International,2024,10449022,10149761,2.95,FAA 2024 commercial service enplanements workbook
+MDW,IL,Chicago,Chicago Midway International,2024,10360093,10659520,-2.81,FAA 2024 commercial service enplanements workbook
+DAL,TX,Dallas,Dallas Love Field,2024,8654991,8559052,1.12,FAA 2024 commercial service enplanements workbook
+PDX,OR,Portland,Portland International,2024,8639088,8123054,6.35,FAA 2024 commercial service enplanements workbook
+STL,MO,St. Louis,St Louis Lambert International,2024,7807362,7307561,6.84,FAA 2024 commercial service enplanements workbook
+RDU,NC,Raleigh,Raleigh-Durham International,2024,7584394,7119040,6.54,FAA 2024 commercial service enplanements workbook
+HOU,TX,Houston,William P Hobby,2024,7116967,6800320,4.66,FAA 2024 commercial service enplanements workbook
+SMF,CA,Sacramento,Sacramento International,2024,6679426,6371910,4.83,FAA 2024 commercial service enplanements workbook
+MSY,LA,Kenner,Louis Armstrong New Orleans International,2024,6537092,6309212,3.61,FAA 2024 commercial service enplanements workbook
+SJU,PR,San Juan,Luis Munoz Marin International,2024,6490669,5985001,8.45,FAA 2024 commercial service enplanements workbook
+MCI,MO,Kansas City,Kansas City International,2024,5915078,5654068,4.62,FAA 2024 commercial service enplanements workbook
+SJC,CA,San Jose,Norman Y Mineta San Jose International,2024,5822019,5958855,-2.3,FAA 2024 commercial service enplanements workbook
+SAT,TX,San Antonio,San Antonio International,2024,5466684,5336684,2.44,FAA 2024 commercial service enplanements workbook
+RSW,FL,Fort Myers,Southwest Florida International,2024,5425293,4963269,9.31,FAA 2024 commercial service enplanements workbook
+SNA,CA,Santa Ana,John Wayne/Orange County,2024,5370273,5706332,-5.89,FAA 2024 commercial service enplanements workbook
+OAK,CA,Oakland,Oakland San Francisco Bay,2024,5292736,5520812,-4.13,FAA 2024 commercial service enplanements workbook
+IND,IN,Indianapolis,Indianapolis International,2024,5181947,4788376,8.22,FAA 2024 commercial service enplanements workbook
+CLE,OH,Cleveland,Cleveland-Hopkins International,2024,4950345,4803822,3.05,FAA 2024 commercial service enplanements workbook
+PIT,PA,Pittsburgh,Pittsburgh International,2024,4862376,4493052,8.22,FAA 2024 commercial service enplanements workbook
+CVG,KY,Hebron,Cincinnati/Northern Kentucky International,2024,4500414,4287722,4.96,FAA 2024 commercial service enplanements workbook
+CMH,OH,Columbus,John Glenn Columbus International,2024,4387395,4095189,7.14,FAA 2024 commercial service enplanements workbook
+PBI,FL,West Palm Beach,Palm Beach International,2024,4127211,3815977,8.16,FAA 2024 commercial service enplanements workbook
+JAX,FL,Jacksonville,Jacksonville International,2024,3749791,3619739,3.59,FAA 2024 commercial service enplanements workbook
+ONT,CA,Ontario,Ontario International,2024,3494554,3181161,9.85,FAA 2024 commercial service enplanements workbook
+OGG,HI,Kahului,Kahului,2024,3415615,3745866,-8.82,FAA 2024 commercial service enplanements workbook
+BUR,CA,Burbank,Bob Hope,2024,3383237,3132029,8.02,FAA 2024 commercial service enplanements workbook
+BDL,CT,Windsor Locks,Bradley International,2024,3285194,3122212,5.22,FAA 2024 commercial service enplanements workbook
+CHS,SC,Charleston,Charleston AFB/International,2024,3115194,3032768,2.72,FAA 2024 commercial service enplanements workbook
+MKE,WI,Milwaukee,General Mitchell International,2024,3104054,2959840,4.87,FAA 2024 commercial service enplanements workbook
+ANC,AK,Anchorage,Ted Stevens Anchorage International,2024,2767856,2681818,3.21,FAA 2024 commercial service enplanements workbook
+ABQ,NM,Albuquerque,Albuquerque International Sunport,2024,2690218,2605163,3.26,FAA 2024 commercial service enplanements workbook
+OMA,NE,Omaha,Eppley Airfield,2024,2583212,2464418,4.82,FAA 2024 commercial service enplanements workbook
+BUF,NY,Buffalo,Buffalo Niagara International,2024,2499295,2291995,9.04,FAA 2024 commercial service enplanements workbook
+BOI,ID,Boise,Boise Air Trml/Gowen Field,2024,2475370,2369164,4.48,FAA 2024 commercial service enplanements workbook
+RIC,VA,Highland Springs,Richmond International,2024,2456422,2399239,2.38,FAA 2024 commercial service enplanements workbook
+ORF,VA,Norfolk,Norfolk International,2024,2444897,2307899,5.94,FAA 2024 commercial service enplanements workbook
+MEM,TN,Memphis,Memphis International,2024,2439366,2399876,1.65,FAA 2024 commercial service enplanements workbook
+RNO,NV,Reno,Reno/Tahoe International,2024,2377780,2251825,5.59,FAA 2024 commercial service enplanements workbook
+SDF,KY,Louisville,Louisville Muhammad Ali International,2024,2343305,2268034,3.32,FAA 2024 commercial service enplanements workbook
+OKC,OK,Oklahoma City,Okc Will Rogers International,2024,2243575,2135106,5.08,FAA 2024 commercial service enplanements workbook
+SRQ,FL,Sarasota,Sarasota/Bradenton International,2024,2112417,2144736,-1.51,FAA 2024 commercial service enplanements workbook
+ELP,TX,El Paso,El Paso International,2024,2071894,2018137,2.66,FAA 2024 commercial service enplanements workbook
+GRR,MI,Grand Rapids,Gerald R Ford International,2024,2065053,1899740,8.7,FAA 2024 commercial service enplanements workbook
+GEG,WA,Spokane,Spokane International,2024,2064142,2002286,3.09,FAA 2024 commercial service enplanements workbook
+LGB,CA,Long Beach,Long Beach (Daugherty Field),2024,2031810,1837634,10.57,FAA 2024 commercial service enplanements workbook
+KOA,HI,Kailua Kona,Ellison Onizuka Kona International at Keahole,2024,2023899,2097042,-3.49,FAA 2024 commercial service enplanements workbook
+SAV,GA,Savannah,Savannah/Hilton Head International,2024,2020753,1909590,5.82,FAA 2024 commercial service enplanements workbook
+PVD,RI,Warwick,Rhode Island Tf Green International,2024,1984916,1732909,14.54,FAA 2024 commercial service enplanements workbook
+TUS,AZ,Tucson International Airport,Tucson International,2024,1959789,1925546,1.78,FAA 2024 commercial service enplanements workbook
+MYR,SC,Myrtle Beach,Myrtle Beach International,2024,1894929,1658984,14.22,FAA 2024 commercial service enplanements workbook
+LIH,HI,Lihue,Lihue,2024,1776627,1814359,-2.08,FAA 2024 commercial service enplanements workbook
+TYS,TN,Alcoa,McGhee Tyson,2024,1639080,1382197,18.59,FAA 2024 commercial service enplanements workbook
+TUL,OK,Tulsa,Tulsa International,2024,1627181,1571600,3.54,FAA 2024 commercial service enplanements workbook
+PSP,CA,Palm Springs,Palm Springs International,2024,1617586,1625327,-0.48,FAA 2024 commercial service enplanements workbook
+BHM,AL,Birmingham,Birmingham-Shuttlesworth International,2024,1596510,1499027,6.5,FAA 2024 commercial service enplanements workbook
+DSM,IA,Des Moines,Des Moines International,2024,1555454,1519262,2.38,FAA 2024 commercial service enplanements workbook
+PNS,FL,Pensacola,Pensacola International,2024,1528204,1365976,11.88,FAA 2024 commercial service enplanements workbook
+ALB,NY,Albany,Albany International,2024,1490673,1376492,8.3,FAA 2024 commercial service enplanements workbook
+SYR,NY,Syracuse,Syracuse Hancock International,2024,1486554,1412853,5.22,FAA 2024 commercial service enplanements workbook
+SFB,FL,Sanford,Orlando Sanford International,2024,1412954,1446884,-2.35,FAA 2024 commercial service enplanements workbook
+GSP,SC,Greer,Greenville Spartanburg International,2024,1412702,1258724,12.23,FAA 2024 commercial service enplanements workbook
+ROC,NY,Rochester,Frederick Douglass/Greater Rochester International,2024,1331837,1325357,0.49,FAA 2024 commercial service enplanements workbook
+BZN,MT,Bozeman,Bozeman Yellowstone International,2024,1321790,1230110,7.45,FAA 2024 commercial service enplanements workbook
+FAT,CA,Fresno,Fresno Yosemite International,2024,1318250,1201789,9.69,FAA 2024 commercial service enplanements workbook
+COS,CO,Colorado Springs,City of Colorado Springs Municipal,2024,1248261,1192123,4.71,FAA 2024 commercial service enplanements workbook
+PIE,FL,Clearwater,St Pete-Clearwater International,2024,1228048,1246323,-1.47,FAA 2024 commercial service enplanements workbook
+PWM,ME,Portland,Portland International Jetport,2024,1221913,1114714,9.62,FAA 2024 commercial service enplanements workbook
+HPN,NY,White Plains,Westchester County,2024,1182384,1156719,2.22,FAA 2024 commercial service enplanements workbook
+VPS,FL,Valparaiso,Eglin AFB/Destin-Ft Walton Beach,2024,1164880,1116717,4.31,FAA 2024 commercial service enplanements workbook
+MSN,WI,Madison,Dane County Regional/Truax Field,2024,1156399,1037983,11.41,FAA 2024 commercial service enplanements workbook
+LIT,AR,Little Rock,Bill and Hillary Clinton Ntl/Adams Field,2024,1145693,1097472,4.39,FAA 2024 commercial service enplanements workbook
+XNA,AR,Bentonville,Northwest Arkansas Ntl,2024,1123106,972907,15.44,FAA 2024 commercial service enplanements workbook
+AVL,NC,Asheville,Asheville Regional,2024,1096465,1125935,-2.62,FAA 2024 commercial service enplanements workbook
+GSO,NC,Greensboro,Piedmont Triad International,2024,985563,903776,9.05,FAA 2024 commercial service enplanements workbook
+IWA,AZ,Mesa,Mesa Gateway,2024,978296,964132,1.47,FAA 2024 commercial service enplanements workbook
+PGD,FL,Punta Gorda,Punta Gorda,2024,957136,949732,0.78,FAA 2024 commercial service enplanements workbook
+GUM,GU,Tamuning,Guam International,2024,932832,860519,8.4,FAA 2024 commercial service enplanements workbook
+ECP,FL,Panama City,Northwest Florida Beaches International,2024,918470,816642,12.47,FAA 2024 commercial service enplanements workbook
+ICT,KS,Wichita,Wichita Dwight D Eisenhower Ntl,2024,885585,843273,5.02,FAA 2024 commercial service enplanements workbook
+EUG,OR,Eugene,Mahlon Sweet Field,2024,824952,841919,-2.02,FAA 2024 commercial service enplanements workbook
+STT,VI,Charlotte Amalie,Cyril E King,2024,821945,705196,16.56,FAA 2024 commercial service enplanements workbook
+HSV,AL,Huntsville,Huntsville International-Carl T Jones Field,2024,804665,724147,11.12,FAA 2024 commercial service enplanements workbook
+LEX,KY,Lexington,Blue Grass,2024,776297,665667,16.62,FAA 2024 commercial service enplanements workbook
+MAF,TX,Midland,Midland International Air And Space Port,2024,761865,684419,11.32,FAA 2024 commercial service enplanements workbook
+CID,IA,Cedar Rapids,The Eastern Iowa,2024,759978,691094,9.97,FAA 2024 commercial service enplanements workbook
+EYW,FL,Key West,Key West International,2024,740762,675343,9.69,FAA 2024 commercial service enplanements workbook
+ILM,NC,Wilmington,Wilmington International,2024,737065,655912,12.37,FAA 2024 commercial service enplanements workbook
+MDT,PA,Harrisburg,Harrisburg International,2024,727163,654791,11.05,FAA 2024 commercial service enplanements workbook
+SGF,MO,Springfield,Springfield-Branson Ntl,2024,702338,632705,11.01,FAA 2024 commercial service enplanements workbook
+FSD,SD,Sioux Falls,Joe Foss Field,2024,701353,655505,6.99,FAA 2024 commercial service enplanements workbook
+SBA,CA,Santa Barbara,Santa Barbara Municipal,2024,696396,638802,9.02,FAA 2024 commercial service enplanements workbook
+ISP,NY,Islip,Long Island MacArthur,2024,682804,641423,6.45,FAA 2024 commercial service enplanements workbook
+ITO,HI,Hilo,Hilo International,2024,680640,684175,-0.52,FAA 2024 commercial service enplanements workbook
+BTV,VT,Burlington,Patrick Leahy Burlington International,2024,670636,649557,3.25,FAA 2024 commercial service enplanements workbook
+CAE,SC,Columbia,Columbia Metro,2024,654460,593590,10.25,FAA 2024 commercial service enplanements workbook
+MHT,NH,Manchester,Manchester Boston Regional,2024,633257,645158,-1.84,FAA 2024 commercial service enplanements workbook
+MFE,TX,McAllen,McAllen International,2024,625670,513770,21.78,FAA 2024 commercial service enplanements workbook
+DAY,OH,Dayton,James M Cox Dayton International,2024,624995,594188,5.18,FAA 2024 commercial service enplanements workbook
+JAN,MS,Jackson,Jackson-Medgar Wiley Evers International,2024,616695,628321,-1.85,FAA 2024 commercial service enplanements workbook
+HRL,TX,Harlingen,Valley International,2024,603561,536510,12.5,FAA 2024 commercial service enplanements workbook
+RDM,OR,Redmond,Roberts Field,2024,601152,558804,7.58,FAA 2024 commercial service enplanements workbook
+HVN,CT,New Haven,Tweed/New Haven,2024,589409,490255,20.22,FAA 2024 commercial service enplanements workbook
+FAI,AK,Fairbanks,Fairbanks International,2024,574012,548679,4.62,FAA 2024 commercial service enplanements workbook
+LBB,TX,Lubbock,Lubbock Preston Smith International,2024,563180,543363,3.65,FAA 2024 commercial service enplanements workbook
+CHA,TN,Chattanooga,Lovell Field,2024,557741,488024,14.29,FAA 2024 commercial service enplanements workbook
+FAR,ND,Fargo,Hector International,2024,552860,522976,5.71,FAA 2024 commercial service enplanements workbook
+ATW,WI,Appleton,Appleton International,2024,540349,474885,13.79,FAA 2024 commercial service enplanements workbook
+JAC,WY,Jackson,Jackson Hole,2024,518754,494863,4.83,FAA 2024 commercial service enplanements workbook
+MSO,MT,Missoula,Missoula Montana,2024,511553,458429,11.59,FAA 2024 commercial service enplanements workbook
+GPI,MT,Kalispell,Glacier Park International,2024,503816,456285,10.42,FAA 2024 commercial service enplanements workbook
+MFR,OR,Medford,Rogue Valley International/Medford,2024,503733,478121,5.36,FAA 2024 commercial service enplanements workbook
+ACY,NJ,Atlantic City,Atlantic City International,2024,489848,437812,11.89,FAA 2024 commercial service enplanements workbook
+PSC,WA,Pasco,Tri-Cities,2024,476639,438076,8.8,FAA 2024 commercial service enplanements workbook
+BIL,MT,Billings,Billings Logan International,2024,475334,428868,10.83,FAA 2024 commercial service enplanements workbook
+TLH,FL,Tallahassee,Tallahassee International,2024,469318,416501,12.68,FAA 2024 commercial service enplanements workbook
+PVU,UT,Provo,Provo Municipal,2024,455219,415197,9.64,FAA 2024 commercial service enplanements workbook
+SBN,IN,South Bend,South Bend International,2024,454920,411377,10.58,FAA 2024 commercial service enplanements workbook
+ABE,PA,Allentown,Lehigh Valley International,2024,447899,419604,6.74,FAA 2024 commercial service enplanements workbook
+JNU,AK,Juneau,Juneau International,2024,436457,440279,-0.87,FAA 2024 commercial service enplanements workbook
+GPT,MS,Gulfport,Gulfport-Biloxi International,2024,424624,376980,12.64,FAA 2024 commercial service enplanements workbook
+FWA,IN,Fort Wayne,Fort Wayne International,2024,424491,392876,8.05,FAA 2024 commercial service enplanements workbook
+BTR,LA,Baton Rouge,"Baton Rouge Metro, Ryan Field",2024,419446,377665,11.06,FAA 2024 commercial service enplanements workbook
+RAP,SD,Rapid City,Rapid City Regional,2024,418183,345532,21.03,FAA 2024 commercial service enplanements workbook
+AMA,TX,Amarillo,Rick Husband Amarillo International,2024,402315,397983,1.09,FAA 2024 commercial service enplanements workbook
+TVC,MI,Traverse City,Cherry Capital,2024,393108,347763,13.04,FAA 2024 commercial service enplanements workbook
+STS,CA,Santa Rosa,Charles M Schulz/Sonoma County,2024,382556,318197,20.23,FAA 2024 commercial service enplanements workbook
+ROA,VA,Roanoke,Roanoke/Blacksburg Regional (Woodrum Field),2024,382103,345561,10.57,FAA 2024 commercial service enplanements workbook
+CAK,OH,Akron,Akron-Canton Regional,2024,380232,344002,10.53,FAA 2024 commercial service enplanements workbook
+BGR,ME,Bangor,Bangor International,2024,376456,357301,5.36,FAA 2024 commercial service enplanements workbook
+CRP,TX,Corpus Christi,Corpus Christi International,2024,369393,352224,4.87,FAA 2024 commercial service enplanements workbook
+SBP,CA,San Luis Obispo,San Luis Obispo County Regional,2024,366428,324925,12.77,FAA 2024 commercial service enplanements workbook
+BQN,PR,Aguadilla,Rafael Hernandez,2024,360645,432822,-16.68,FAA 2024 commercial service enplanements workbook
+SHV,LA,Shreveport,Shreveport Regional,2024,352281,308925,14.03,FAA 2024 commercial service enplanements workbook
+CHO,VA,Charlottesville-Albemarle Airport,Charlottesville-Albemarle,2024,351138,308485,13.83,FAA 2024 commercial service enplanements workbook
+ASE,CO,Aspen,Aspen-Pitkin County/Sardy Field,2024,349781,309411,13.05,FAA 2024 commercial service enplanements workbook
+MLB,FL,Melbourne,Melbourne Orlando International,2024,348283,363844,-4.28,FAA 2024 commercial service enplanements workbook
+PIA,IL,Peoria,General Downing - Peoria International,2024,343114,315482,8.76,FAA 2024 commercial service enplanements workbook
+GRB,WI,Green Bay,Green Bay/Austin Straubel International,2024,338127,330492,2.31,FAA 2024 commercial service enplanements workbook
+DAB,FL,Daytona Beach,Daytona Beach International,2024,337763,348080,-2.96,FAA 2024 commercial service enplanements workbook
+MLI,IL,Moline,Quad Cities International,2024,326888,272481,19.97,FAA 2024 commercial service enplanements workbook
+MOB,AL,Mobile,Mobile Regional,2024,314406,275342,14.19,FAA 2024 commercial service enplanements workbook
+MRY,CA,Monterey,Monterey Regional,2024,305434,259778,17.58,FAA 2024 commercial service enplanements workbook
+IDA,ID,Idaho Falls,Idaho Falls Regional,2024,301674,270140,11.67,FAA 2024 commercial service enplanements workbook
+AGS,GA,Augusta,Augusta Regional at Bush Field,2024,299141,280553,6.63,FAA 2024 commercial service enplanements workbook
+BIS,ND,Bismarck,Bismarck Municipal,2024,295900,258780,14.34,FAA 2024 commercial service enplanements workbook
+GNV,FL,Gainesville,Gainesville Regional,2024,290563,273366,6.29,FAA 2024 commercial service enplanements workbook
+FNT,MI,Flint,Bishop International,2024,285088,281903,1.13,FAA 2024 commercial service enplanements workbook
+EGE,CO,Eagle,Eagle County Regional,2024,282849,226950,24.63,FAA 2024 commercial service enplanements workbook
+PAE,WA,Everett,Seattle Paine Field International,2024,275996,306499,-9.95,FAA 2024 commercial service enplanements workbook
+GJT,CO,Grand Junction,Grand Junction Regional,2024,270935,243808,11.13,FAA 2024 commercial service enplanements workbook
+BLI,WA,Bellingham,Bellingham International,2024,266703,311234,-14.31,FAA 2024 commercial service enplanements workbook
+STX,VI,Christiansted,Henry E Rohlsen,2024,265243,235392,12.68,FAA 2024 commercial service enplanements workbook
+MTJ,CO,Montrose,Montrose Regional,2024,264973,244266,8.48,FAA 2024 commercial service enplanements workbook
+LFT,LA,Lafayette,Lafayette Regional/Paul Fournet Field,2024,264471,229831,15.07,FAA 2024 commercial service enplanements workbook
+DRO,CO,Durango,Durango-La Plata County,2024,250640,217357,15.31,FAA 2024 commercial service enplanements workbook
+TTN,NJ,Trenton,Trenton Mercer,2024,241950,326300,-25.85,FAA 2024 commercial service enplanements workbook
+GSN,MP,Saipan,Francisco C Ada/Saipan International,2024,234042,218374,7.17,FAA 2024 commercial service enplanements workbook
+TRI,TN,Bristol/Johnson/Kingsport,Tri-Cities,2024,229860,220977,4.02,FAA 2024 commercial service enplanements workbook
+HDN,CO,Hayden,Yampa Valley,2024,226830,206236,9.99,FAA 2024 commercial service enplanements workbook
+AVP,PA,Avoca,Wilkes-Barre/Scranton International,2024,219572,174061,26.15,FAA 2024 commercial service enplanements workbook
+AEX,LA,Alexandria,Alexandria International,2024,204603,176351,16.02,FAA 2024 commercial service enplanements workbook
+CRW,WV,Charleston,West Virginia International Yeager,2024,202303,194898,3.8,FAA 2024 commercial service enplanements workbook
+BFL,CA,Bakersfield,Meadows Field,2024,195148,174891,11.58,FAA 2024 commercial service enplanements workbook
+MGM,AL,Montgomery,Montgomery Regional (Dannelly Field),2024,193746,181927,6.5,FAA 2024 commercial service enplanements workbook
+EVV,IN,Evansville,Evansville Regional,2024,189706,165186,14.84,FAA 2024 commercial service enplanements workbook
+BRO,TX,Brownsville,Brownsville/South Padre Island International,2024,188157,176056,6.87,FAA 2024 commercial service enplanements workbook
+GTF,MT,Great Falls,Great Falls International,2024,186778,177290,5.35,FAA 2024 commercial service enplanements workbook
+SAF,NM,Santa Fe,Santa Fe Regional,2024,180248,140257,28.51,FAA 2024 commercial service enplanements workbook
+LRD,TX,Laredo,Laredo International,2024,172726,151114,14.3,FAA 2024 commercial service enplanements workbook
+MOT,ND,Minot,Minot International,2024,169463,146874,15.38,FAA 2024 commercial service enplanements workbook
+FAY,NC,Fayetteville,Fayetteville Regional/Grannis Field,2024,168117,167572,0.33,FAA 2024 commercial service enplanements workbook
+BET,AK,Bethel,Bethel,2024,165846,153548,8.01,FAA 2024 commercial service enplanements workbook
+BMI,IL,Bloomington-Normal Airport,Central Il Regional/Bloomington-Normal,2024,161971,164672,-1.64,FAA 2024 commercial service enplanements workbook
+SGU,UT,St. George,St George Regional,2024,161201,136411,18.17,FAA 2024 commercial service enplanements workbook
+ACK,MA,Nantucket,Nantucket Memorial,2024,154173,137664,11.99,FAA 2024 commercial service enplanements workbook
+BLV,IL,Belleville,Scott AFB/Midamerica St Louis,2024,152632,147421,3.53,FAA 2024 commercial service enplanements workbook
+KTN,AK,Ketchikan,Ketchikan International,2024,152082,148645,2.31,FAA 2024 commercial service enplanements workbook
+OAJ,NC,Richlands,Albert J Ellis,2024,145901,133839,9.01,FAA 2024 commercial service enplanements workbook
+SWF,NY,Newburgh,New York Stewart International,2024,143310,129610,10.57,FAA 2024 commercial service enplanements workbook
+LCK,OH,Columbus,Rickenbacker International,2024,143035,149363,-4.24,FAA 2024 commercial service enplanements workbook
+PSE,PR,Ponce,Mercedita,2024,137553,142076,-3.18,FAA 2024 commercial service enplanements workbook
+DLH,MN,Duluth,Duluth International,2024,135966,128109,6.13,FAA 2024 commercial service enplanements workbook
+UNV,PA,State College,State College Regional,2024,134128,138860,-3.41,FAA 2024 commercial service enplanements workbook
+ACV,CA,Arcata,California Redwood Coast-Humboldt County,2024,133682,117972,13.32,FAA 2024 commercial service enplanements workbook
+RFD,IL,Rockford,Chicago/Rockford International,2024,132154,120494,9.68,FAA 2024 commercial service enplanements workbook
+JQF,NC,Concord,Concord-Padgett Regional,2024,132000,119072,10.86,FAA 2024 commercial service enplanements workbook
+LNK,NE,Lincoln,Lincoln,2024,129968,131882,-1.45,FAA 2024 commercial service enplanements workbook
+ILG,DE,Wilmington,New Castle,2024,125071,133377,-6.23,FAA 2024 commercial service enplanements workbook
+LAN,MI,Clinton (Township of),Capital Region International,2024,123608,115895,6.66,FAA 2024 commercial service enplanements workbook
+SUN,ID,Hailey,Friedman Memorial,2024,121123,109368,10.75,FAA 2024 commercial service enplanements workbook
+GRK,TX,Killeen,Robert Gray AAF,2024,117523,113701,3.36,FAA 2024 commercial service enplanements workbook
+ORH,MA,Worcester,Worcester Regional,2024,112872,104747,7.76,FAA 2024 commercial service enplanements workbook
+MBS,MI,Saginaw,MBS International,2024,110822,93545,18.47,FAA 2024 commercial service enplanements workbook
+HXD,SC,Hilton Head Island,Hilton Head,2024,108775,103964,4.63,FAA 2024 commercial service enplanements workbook
+MLU,LA,Monroe,Monroe Regional,2024,105274,96964,8.57,FAA 2024 commercial service enplanements workbook
+COU,MO,Columbia,Columbia Regional,2024,103081,97779,5.42,FAA 2024 commercial service enplanements workbook
+HLN,MT,Helena,Helena Regional,2024,101591,88319,15.03,FAA 2024 commercial service enplanements workbook
+PSM,NH,Portsmouth,Portsmouth International at Pease,2024,100298,57448,74.59,FAA 2024 commercial service enplanements workbook
+XWA,ND,Williston,Williston Basin International,2024,99735,82258,21.25,FAA 2024 commercial service enplanements workbook
+CPR,WY,Casper,Casper/Natrona County International,2024,99658,87181,14.31,FAA 2024 commercial service enplanements workbook
+RST,MN,Rochester,Rochester International,2024,98537,93490,5.4,FAA 2024 commercial service enplanements workbook
+SIT,AK,Sitka,Sitka Rocky Gutierrez,2024,98066,96214,1.92,FAA 2024 commercial service enplanements workbook
+SCC,AK,Deadhorse,Deadhorse,2024,96967,82296,17.83,FAA 2024 commercial service enplanements workbook
+ABI,TX,Abilene,Abilene Regional,2024,94579,79831,18.47,FAA 2024 commercial service enplanements workbook
+HTS,WV,Huntington,Tri-State/Milton J Ferguson Field,2024,93330,88888,5.0,FAA 2024 commercial service enplanements workbook
+PBG,NY,Plattsburgh,Plattsburgh International,2024,92960,72150,28.84,FAA 2024 commercial service enplanements workbook
+AZO,MI,Kalamazoo,Kalamazoo/Battle Creek International,2024,92510,87626,5.57,FAA 2024 commercial service enplanements workbook
+GFK,ND,Grand Forks,Grand Forks International,2024,92482,93877,-1.49,FAA 2024 commercial service enplanements workbook
+LCH,LA,Lake Charles,Lake Charles Regional,2024,90791,82425,10.15,FAA 2024 commercial service enplanements workbook
+CWA,WI,Mosinee,Central Wisconsin,2024,90087,84775,6.27,FAA 2024 commercial service enplanements workbook
+RDD,CA,Redding,Redding Regional,2024,88676,87670,1.15,FAA 2024 commercial service enplanements workbook
+VRB,FL,Vero Beach,Vero Beach Regional,2024,88608,42329,109.33,FAA 2024 commercial service enplanements workbook
+EWN,NC,New Bern,Coastal Carolina Regional,2024,86653,59159,46.47,FAA 2024 commercial service enplanements workbook
+CMI,IL,Savoy,University of Illinois/Willard,2024,86626,70184,23.43,FAA 2024 commercial service enplanements workbook
+ADQ,AK,Kodiak,Kodiak,2024,86579,85183,1.64,FAA 2024 commercial service enplanements workbook
+MHK,KS,Manhattan,Manhattan Regional,2024,85901,51412,67.08,FAA 2024 commercial service enplanements workbook
+ELM,NY,Elmira,Elmira/Corning Regional,2024,85696,85034,0.78,FAA 2024 commercial service enplanements workbook
+NYL,AZ,Yuma,Yuma MCAS/Yuma International,2024,85227,94364,-9.68,FAA 2024 commercial service enplanements workbook
+MKK,HI,Kaunakakai,Molokai,2024,84029,85341,-1.54,FAA 2024 commercial service enplanements workbook
+MVY,MA,Vineyard Haven,Martha's Vineyard,2024,83419,83621,-0.24,FAA 2024 commercial service enplanements workbook
+LYH,VA,Timberlake,Lynchburg Regional/Preston Glenn Field,2024,81477,74730,9.03,FAA 2024 commercial service enplanements workbook
+FLG,AZ,- Flagstaff,Flagstaff Pulliam,2024,79081,73992,6.88,FAA 2024 commercial service enplanements workbook
+LBE,PA,Latrobe,Arnold Palmer Regional,2024,76437,76925,-0.63,FAA 2024 commercial service enplanements workbook
+ENA,AK,Kenai,Kenai Municipal,2024,75395,67062,12.43,FAA 2024 commercial service enplanements workbook
+ITH,NY,Ithaca,Ithaca Tompkins International,2024,69613,60848,14.4,FAA 2024 commercial service enplanements workbook
+OME,AK,Nome,Nome,2024,69593,66883,4.05,FAA 2024 commercial service enplanements workbook
+PHF,VA,Newport News,Newport News/Williamsburg International,2024,68787,69541,-1.08,FAA 2024 commercial service enplanements workbook
+CLL,TX,College Station,Easterwood Field,2024,68316,60072,13.72,FAA 2024 commercial service enplanements workbook
+GRI,NE,Grand Island,Central Nebraska Regional,2024,67747,65092,4.08,FAA 2024 commercial service enplanements workbook
+TOL,OH,Toledo,Eugene F Kranz Toledo Express,2024,66614,70346,-5.31,FAA 2024 commercial service enplanements workbook
+PUW,WA,Pullman,Pullman/Moscow Regional,2024,64580,63835,1.17,FAA 2024 commercial service enplanements workbook
+SCK,CA,Stockton,Stockton Metro,2024,63668,67688,-5.94,FAA 2024 commercial service enplanements workbook
+CSG,GA,Columbus,Columbus,2024,63422,65701,-3.47,FAA 2024 commercial service enplanements workbook
+OTZ,AK,Kotzebue,Ralph Wien Memorial,2024,60547,60124,0.7,FAA 2024 commercial service enplanements workbook
+SBY,MD,Salisbury,Salisbury-Ocean City Wicomico Regional,2024,60442,52236,15.71,FAA 2024 commercial service enplanements workbook
+BVU,NV,Boulder City,Boulder City Municipal,2024,59617,49841,19.61,FAA 2024 commercial service enplanements workbook
+FSM,AR,Fort Smith,Fort Smith Regional,2024,59250,58615,1.08,FAA 2024 commercial service enplanements workbook
+IAG,NY,Niagara Falls,Niagara Falls International,2024,59119,52631,12.33,FAA 2024 commercial service enplanements workbook
+GUC,CO,Gunnison,Gunnison-Crested Butte Regional,2024,58804,49588,18.59,FAA 2024 commercial service enplanements workbook
+LWS,ID,Lewiston,Lewiston/Nez Perce County,2024,55467,36761,50.89,FAA 2024 commercial service enplanements workbook
+ACT,TX,Waco,Waco Regional,2024,53849,51867,3.82,FAA 2024 commercial service enplanements workbook
+SPI,IL,Springfield,Abraham Lincoln Capital,2024,51784,50513,2.52,FAA 2024 commercial service enplanements workbook
+TYR,TX,Tyler,Tyler Pounds Regional,2024,51296,50155,2.27,FAA 2024 commercial service enplanements workbook
+SJT,TX,San Angelo,San Angelo Regional/Mathis Field,2024,49493,51865,-4.57,FAA 2024 commercial service enplanements workbook
+ROW,NM,Roswell,Roswell Air Center,2024,48740,44943,8.45,FAA 2024 commercial service enplanements workbook
+GTR,MS,Columbus,Golden Triangle Regional,2024,47323,42509,11.32,FAA 2024 commercial service enplanements workbook
+ERI,PA,Erie,Erie International/Tom Ridge Field,2024,46810,47206,-0.84,FAA 2024 commercial service enplanements workbook
+VLD,GA,Valdosta,Valdosta Regional,2024,46744,42160,10.87,FAA 2024 commercial service enplanements workbook
+LAW,OK,Lawton,Lawton-Fort Sill Regional,2024,45031,45716,-1.5,FAA 2024 commercial service enplanements workbook
+PPG,AS,Pago Pago,Pago Pago International,2024,44656,43467,2.74,FAA 2024 commercial service enplanements workbook
+SAW,MI,Gwinn,Marquette/Sawyer Regional,2024,44574,42660,4.49,FAA 2024 commercial service enplanements workbook
+EAT,WA,East Wenatchee,Pangborn Memorial,2024,44459,27655,60.76,FAA 2024 commercial service enplanements workbook
+BRW,AK,Barrow,Wiley Post-Will Rogers Memorial,2024,43364,41579,4.29,FAA 2024 commercial service enplanements workbook
+BQK,GA,Brunswick,Brunswick Golden Isles,2024,42771,33832,26.42,FAA 2024 commercial service enplanements workbook
+PGV,NC,Greenville,Pitt-Greenville,2024,42318,34824,21.52,FAA 2024 commercial service enplanements workbook
+CKB,WV,Clarksburg,North Central West Virginia,2024,42288,42736,-1.05,FAA 2024 commercial service enplanements workbook
+HGR,MD,Hagerstown,Hagerstown Regional/Richard A Henson Field,2024,41508,32331,28.38,FAA 2024 commercial service enplanements workbook
+YKM,WA,Yakima,Yakima Air Trml/McAllister Field,2024,41471,24044,72.48,FAA 2024 commercial service enplanements workbook
+LSE,WI,La Crosse,La Crosse Regional,2024,40608,43681,-7.04,FAA 2024 commercial service enplanements workbook
+DHN,AL,Dothan,Dothan Regional,2024,39339,35667,10.3,FAA 2024 commercial service enplanements workbook
+AKN,AK,King Salmon,King Salmon,2024,39289,38021,3.33,FAA 2024 commercial service enplanements workbook
+VQS,PR,Vieques,Antonio Rivera Rodriguez,2024,37756,28961,30.37,FAA 2024 commercial service enplanements workbook
+COD,WY,Cody,Yellowstone Regional,2024,37437,34711,7.85,FAA 2024 commercial service enplanements workbook
+ALW,WA,Walla Walla,Walla Walla Regional,2024,36873,26465,39.33,FAA 2024 commercial service enplanements workbook
+TXK,AR,Texarkana,Texarkana Regional-Webb Field,2024,36307,41951,-13.45,FAA 2024 commercial service enplanements workbook
+GGG,TX,Longview,East Texas Regional,2024,35057,32613,7.49,FAA 2024 commercial service enplanements workbook
+SWO,OK,Stillwater,Stillwater Regional,2024,34729,35358,-1.78,FAA 2024 commercial service enplanements workbook
+DLG,AK,Dillingham,Dillingham,2024,34656,34815,-0.46,FAA 2024 commercial service enplanements workbook
+BPT,TX,Beaumont,Jack Brooks Regional,2024,33907,32150,5.47,FAA 2024 commercial service enplanements workbook
+MRI,AK,Anchorage,Merrill Field,2024,32601,32219,1.19,FAA 2024 commercial service enplanements workbook
+TWF,ID,Twin Falls,Joslin Field/Magic Valley Regional,2024,31734,19871,59.7,FAA 2024 commercial service enplanements workbook
+GCK,KS,Garden City,Garden City Regional,2024,31167,27856,11.89,FAA 2024 commercial service enplanements workbook
+PLN,MI,Pellston,Pellston Regional/Emmet County,2024,31060,22264,39.51,FAA 2024 commercial service enplanements workbook
+TNI,MP,Tinian (Municipality),Francisco Manglona Borja/Tinian International,2024,30538,26143,16.81,FAA 2024 commercial service enplanements workbook
+GCC,WY,Gillette,Northeast Wyoming Regional,2024,30321,26784,13.21,FAA 2024 commercial service enplanements workbook
+ABY,GA,Albany,Southwest Georgia Regional,2024,30295,30025,0.9,FAA 2024 commercial service enplanements workbook
+SPS,TX,Wichita Falls,Sheppard AFB/Wichita Falls Municipal,2024,29702,25075,18.45,FAA 2024 commercial service enplanements workbook
+1G4,AZ,Peach Springs,Grand Canyon West,2024,29597,33982,-12.9,FAA 2024 commercial service enplanements workbook
+SHR,WY,Sheridan,Sheridan County,2024,29471,26641,10.62,FAA 2024 commercial service enplanements workbook
+BFI,WA,Seattle,Boeing Field/King County International,2024,28769,27446,4.82,FAA 2024 commercial service enplanements workbook
+BJI,MN,Bemidji,Bemidji Regional,2024,28536,25179,13.33,FAA 2024 commercial service enplanements workbook
+SUX,IA,Sioux City,Sioux Gateway/Brig General Bud Day Field,2024,28299,27111,4.38,FAA 2024 commercial service enplanements workbook
+SLE,OR,Salem,McNary Field,2024,28119,6993,302.1,FAA 2024 commercial service enplanements workbook
+CYS,WY,Cheyenne,Cheyenne Regional/Jerry Olson Field,2024,27602,13132,110.19,FAA 2024 commercial service enplanements workbook
+HOM,AK,Homer,Homer,2024,27482,34682,-20.76,FAA 2024 commercial service enplanements workbook
+CIU,MI,Sault Ste. Marie,Chippewa County International,2024,26482,22166,19.47,FAA 2024 commercial service enplanements workbook
+HOB,NM,Hobbs,Lea County Regional,2024,26212,22187,18.14,FAA 2024 commercial service enplanements workbook
+DIK,ND,Dickinson,Dickinson/Theodore Roosevelt Regional,2024,26146,24123,8.39,FAA 2024 commercial service enplanements workbook
+CMX,MI,Hancock,Houghton County Memorial,2024,25833,23355,10.61,FAA 2024 commercial service enplanements workbook
+HYA,MA,Hyannis,Cape Cod Gateway,2024,25626,17472,46.67,FAA 2024 commercial service enplanements workbook
+PRC,AZ,Prescott,Prescott Regional/Ernest A Love Field,2024,25316,24583,2.98,FAA 2024 commercial service enplanements workbook
+PSG,AK,Petersburg,Petersburg James A Johnson,2024,25209,24921,1.16,FAA 2024 commercial service enplanements workbook
+LNY,HI,Lanai City,Lanai,2024,25186,34430,-26.85,FAA 2024 commercial service enplanements workbook
+RHI,WI,Rhinelander,Rhinelander/Oneida County,2024,24826,20991,18.27,FAA 2024 commercial service enplanements workbook
+FLO,SC,Florence,Florence Regional,2024,24728,22734,8.77,FAA 2024 commercial service enplanements workbook
+PIH,ID,Arbon Valley,Pocatello Regional,2024,24610,17504,40.6,FAA 2024 commercial service enplanements workbook
+BGM,NY,Binghamton,Greater Binghamton/Edwin A Link Field,2024,24496,36647,-33.16,FAA 2024 commercial service enplanements workbook
+LAL,FL,Lakeland,Lakeland Linder International,2024,24185,224,10696.88,FAA 2024 commercial service enplanements workbook
+STC,MN,St. Cloud,St. Cloud Regional,2024,23885,19556,22.14,FAA 2024 commercial service enplanements workbook
+ABR,SD,Aberdeen,Aberdeen Regional,2024,23705,22112,7.2,FAA 2024 commercial service enplanements workbook
+SLN,KS,Salina,Salina Regional,2024,23456,15080,55.54,FAA 2024 commercial service enplanements workbook
+ART,NY,Watertown,Watertown International,2024,23188,21524,7.73,FAA 2024 commercial service enplanements workbook
+DUT,AK,Unalaska,Unalaska,2024,22712,19201,18.29,FAA 2024 commercial service enplanements workbook
+PGA,AZ,Page,Page Municipal,2024,22400,15974,40.23,FAA 2024 commercial service enplanements workbook
+EAU,WI,Eau Claire,Chippewa Valley Regional,2024,22289,25856,-13.8,FAA 2024 commercial service enplanements workbook
+PQI,ME,Presque Isle,Presque Isle International,2024,21633,19269,12.27,FAA 2024 commercial service enplanements workbook
+RIW,WY,Riverton,Central Wyoming Regional,2024,21624,15350,40.87,FAA 2024 commercial service enplanements workbook
+RKS,WY,Rock Springs,Southwest Wyoming Regional,2024,21541,16158,33.31,FAA 2024 commercial service enplanements workbook
+OTH,OR,North Bend,Southwest Oregon Regional,2024,20495,19590,4.62,FAA 2024 commercial service enplanements workbook
+SBD,CA,San Bernardino,San Bernardino International,2024,20147,27349,-26.33,FAA 2024 commercial service enplanements workbook
+RVR,PR,Ceiba,Jose Aponte De La Torre,2024,19681,19786,-0.53,FAA 2024 commercial service enplanements workbook
+IMT,MI,Iron Mountain,Ford,2024,19483,17966,8.44,FAA 2024 commercial service enplanements workbook
+LAR,WY,Laramie,Laramie Regional,2024,19061,18094,5.34,FAA 2024 commercial service enplanements workbook
+CDV,AK,Cordova,Merle K (Mudhole) Smith,2024,18641,18244,2.18,FAA 2024 commercial service enplanements workbook
+JLN,MO,Joplin,Joplin Regional,2024,18362,14420,27.34,FAA 2024 commercial service enplanements workbook
+JST,PA,Johnstown,John Murtha Johnstown/Cambria County,2024,17690,14253,24.11,FAA 2024 commercial service enplanements workbook
+CRQ,CA,Carlsbad,McClellan-Palomar,2024,17434,4329,302.73,FAA 2024 commercial service enplanements workbook
+ESC,MI,Escanaba,Delta County,2024,17120,15659,9.33,FAA 2024 commercial service enplanements workbook
+MCN,GA,Macon,Middle Georgia Regional,2024,17020,15832,7.5,FAA 2024 commercial service enplanements workbook
+MEI,MS,Meridian,Key Field,2024,17003,15513,9.6,FAA 2024 commercial service enplanements workbook
+SIG,PR,San Juan,Fernando Luis Ribas Dominicci,2024,16844,13447,25.26,FAA 2024 commercial service enplanements workbook
+LBF,NE,North Platte,North Platte Regional/Lee Bird Field,2024,16537,14371,15.07,FAA 2024 commercial service enplanements workbook
+BRD,MN,Brainerd,Brainerd Lakes Regional,2024,16255,16218,0.23,FAA 2024 commercial service enplanements workbook
+AKW,AK,Klawock,Klawock,2024,16224,16733,-3.04,FAA 2024 commercial service enplanements workbook
+TUP,MS,Tupelo,Tupelo Regional,2024,16194,13526,19.72,FAA 2024 commercial service enplanements workbook
+BTM,MT,Butte,Bert Mooney,2024,15773,16033,-1.62,FAA 2024 commercial service enplanements workbook
+OGD,UT,Ogden,Ogden-Hinckley,2024,15582,215,7147.44,FAA 2024 commercial service enplanements workbook
+PIB,MS,Moselle,Hattiesburg/Laurel Regional,2024,15575,13002,19.79,FAA 2024 commercial service enplanements workbook
+HYS,KS,Hays,Hays Regional,2024,15002,10038,49.45,FAA 2024 commercial service enplanements workbook
+PIR,SD,Pierre,Pierre Regional,2024,14887,15885,-6.28,FAA 2024 commercial service enplanements workbook
+INL,MN,International Falls,Falls International/Einarson Field,2024,14842,13277,11.79,FAA 2024 commercial service enplanements workbook
+CPX,PR,Culebra,Benjamin Rivera Noriega,2024,14663,18922,-22.51,FAA 2024 commercial service enplanements workbook
+WRG,AK,Wrangell,Wrangell,2024,14560,14323,1.65,FAA 2024 commercial service enplanements workbook
+ATY,SD,Watertown,Watertown Regional,2024,14134,15532,-9.0,FAA 2024 commercial service enplanements workbook
+EAR,NE,Kearney,Kearney Regional,2024,14130,14684,-3.77,FAA 2024 commercial service enplanements workbook
+VCT,TX,Victoria,Victoria Regional,2024,14006,11293,24.02,FAA 2024 commercial service enplanements workbook
+BFF,NE,Scottsbluff,Scottsbluff/Western Nebraska Regional/Wm B Heilig Field,2024,13841,12052,14.84,FAA 2024 commercial service enplanements workbook
+MWA,IL,Marion,Veterans Airport of Southern Illinois,2024,13816,10558,30.86,FAA 2024 commercial service enplanements workbook
+SMX,CA,Santa Maria,Santa Maria Public/Capt G Allan Hancock Field,2024,13525,14409,-6.14,FAA 2024 commercial service enplanements workbook
+PAH,KY,Paducah,Barkley Regional,2024,13456,13057,3.06,FAA 2024 commercial service enplanements workbook
+RKD,ME,Rockland,Knox County Regional,2024,13309,7047,88.86,FAA 2024 commercial service enplanements workbook
+FHR,WA,Friday Harbor,Friday Harbor,2024,12898,12709,1.49,FAA 2024 commercial service enplanements workbook
+EKO,NV,Elko,Elko Regional,2024,12881,10723,20.12,FAA 2024 commercial service enplanements workbook
+DEC,IL,Decatur,Decatur,2024,12747,11216,13.65,FAA 2024 commercial service enplanements workbook
+WST,RI,Westerly,Westerly State,2024,12320,12328,-0.06,FAA 2024 commercial service enplanements workbook
+ALS,CO,Alamosa,San Luis Valley Regional/Bergman Field,2024,12232,11319,8.07,FAA 2024 commercial service enplanements workbook
+CVN,NM,Clovis,Clovis Regional,2024,12033,13623,-11.67,FAA 2024 commercial service enplanements workbook
+ALO,IA,Waterloo,Waterloo Regional,2024,12006,12885,-6.82,FAA 2024 commercial service enplanements workbook
+YAK,AK,Yakutat,Yakutat,2024,11923,12105,-1.5,FAA 2024 commercial service enplanements workbook
+BID,RI,Block Island,Block Island State,2024,11867,15194,-21.9,FAA 2024 commercial service enplanements workbook
+CDC,UT,Cedar City,Cedar City Regional,2024,11855,11768,0.74,FAA 2024 commercial service enplanements workbook
+GAL,AK,Galena,Edward G Pitka Sr,2024,11852,11758,0.8,FAA 2024 commercial service enplanements workbook
+HIB,MN,Hibbing,Range Regional,2024,11294,11775,-4.08,FAA 2024 commercial service enplanements workbook
+TBN,MO,Fort Leonard Wood (U.S. Army),Waynesville-St Robert Regional Forney Field,2024,11276,11853,-4.87,FAA 2024 commercial service enplanements workbook
+APN,MI,Alpena,Alpena County Regional,2024,11150,8034,38.79,FAA 2024 commercial service enplanements workbook
+BHB,ME,Bar Harbor,Hancock County/Bar Harbor,2024,11042,10478,5.38,FAA 2024 commercial service enplanements workbook
+LEB,NH,Lebanon,Lebanon Municipal,2024,10934,10863,0.65,FAA 2024 commercial service enplanements workbook
+TEX,CO,Telluride,Telluride Regional,2024,10721,10826,-0.97,FAA 2024 commercial service enplanements workbook
+GRO,MP,Northern Islands (Municipality),Benjamin Taisacan Manglona International,2024,10717,11136,-3.76,FAA 2024 commercial service enplanements workbook
+CNY,UT,Moab,Canyonlands Regional,2024,10625,19310,-44.98,FAA 2024 commercial service enplanements workbook
+VEL,UT,Vernal,Vernal Regional,2024,10578,13952,-24.18,FAA 2024 commercial service enplanements workbook
+FXE,FL,Fort Lauderdale,Fort Lauderdale Exec,2024,10493,10625,-1.24,FAA 2024 commercial service enplanements workbook
+BIH,CA,Bishop,Bishop,2024,10119,10007,1.12,FAA 2024 commercial service enplanements workbook
+GST,AK,Gustavus,Gustavus,2024,10074,9584,5.11,FAA 2024 commercial service enplanements workbook
+ENM,AK,Emmonak,Emmonak,2024,9854,9760,0.96,FAA 2024 commercial service enplanements workbook
+WYS,MT,West Yellowstone,Yellowstone,2024,9569,8750,9.36,FAA 2024 commercial service enplanements workbook
+JMS,ND,Jamestown,Jamestown Regional,2024,9516,10590,-10.14,FAA 2024 commercial service enplanements workbook
+ORS,WA,Eastsound,Orcas Island,2024,9512,8089,17.59,FAA 2024 commercial service enplanements workbook
+CGI,MO,Cape Girardeau,Cape Girardeau Regional,2024,9493,7563,25.52,FAA 2024 commercial service enplanements workbook
+DVL,ND,Devils Lake,Devils Lake Regional,2024,9488,8051,17.85,FAA 2024 commercial service enplanements workbook
+MAZ,PR,Mayaguez,Eugenio Maria De Hostos,2024,9207,8224,11.95,FAA 2024 commercial service enplanements workbook
+LWB,WV,Lewisburg,Greenbrier Valley,2024,9011,8328,8.2,FAA 2024 commercial service enplanements workbook
+OWB,KY,Owensboro,Owensboro/Daviess County Regional,2024,8835,10822,-18.36,FAA 2024 commercial service enplanements workbook
+CEZ,CO,Cortez,Cortez Municipal,2024,8820,9045,-2.49,FAA 2024 commercial service enplanements workbook
+SHD,VA,Weyers Cave,Shenandoah Valley Regional,2024,8762,7990,9.66,FAA 2024 commercial service enplanements workbook
+TVF,MN,Thief River Falls,Thief River Falls Regional,2024,8675,8418,3.05,FAA 2024 commercial service enplanements workbook
+LNS,PA,Lititz,Lancaster,2024,8417,6264,34.37,FAA 2024 commercial service enplanements workbook
+DDC,KS,Dodge City,Dodge City Regional,2024,8300,6432,29.04,FAA 2024 commercial service enplanements workbook
+LBL,KS,Liberal,Liberal Mid-America Regional,2024,8181,8267,-1.04,FAA 2024 commercial service enplanements workbook
+CEC,CA,Crescent City,Jack McNamara Field,2024,8027,7879,1.88,FAA 2024 commercial service enplanements workbook
+MGW,WV,Morgantown,Morgantown Municipal/Walter L Bill Hart Field,2024,8017,6842,17.17,FAA 2024 commercial service enplanements workbook
+FOD,IA,Fort Dodge,Fort Dodge Regional,2024,7733,6195,24.83,FAA 2024 commercial service enplanements workbook
+BFM,AL,Mobile,Mobile International,2024,7633,10840,-29.58,FAA 2024 commercial service enplanements workbook
+MSL,AL,Muscle Shoals,Northwest Alabama Regional,2024,7373,5907,24.82,FAA 2024 commercial service enplanements workbook
+SDY,MT,Sidney,Sidney-Richland Regional,2024,7331,8020,-8.59,FAA 2024 commercial service enplanements workbook
+IWD,MI,Ironwood,Gogebic/Iron County,2024,7091,7042,0.7,FAA 2024 commercial service enplanements workbook
+PVC,MA,Provincetown,Provincetown Municipal,2024,7033,7746,-9.2,FAA 2024 commercial service enplanements workbook
+UNK,AK,Unalakleet,Unalakleet,2024,7030,8312,-15.42,FAA 2024 commercial service enplanements workbook
+MBL,MI,Manistee,Manistee County/Blacker,2024,6968,6039,15.38,FAA 2024 commercial service enplanements workbook
+SVC,NM,Silver City,Grant County,2024,6915,6973,-0.83,FAA 2024 commercial service enplanements workbook
+GLH,MS,Greenville,Greenville Mid-Delta,2024,6582,7521,-12.49,FAA 2024 commercial service enplanements workbook
+PDT,OR,Pendleton,Eastern Oregon Regional at Pendleton,2024,6579,5544,18.67,FAA 2024 commercial service enplanements workbook
+MCW,IA,Clear Lake,Mason City Municipal,2024,6564,5780,13.56,FAA 2024 commercial service enplanements workbook
+HHR,CA,Hawthorne,Jack Northrop Field/Hawthorne Municipal,2024,6417,5100,25.82,FAA 2024 commercial service enplanements workbook
+HNS,AK,Haines,Haines,2024,6362,6306,0.89,FAA 2024 commercial service enplanements workbook
+OGS,NY,Ogdensburg,Ogdensburg International,2024,6269,5801,8.07,FAA 2024 commercial service enplanements workbook
+W33,WA,Friday Harbor,Friday Harbor,2024,6167,4080,51.15,FAA 2024 commercial service enplanements workbook
+DBQ,IA,Dubuque,Dubuque Regional,2024,6078,16482,-63.12,FAA 2024 commercial service enplanements workbook
+CXF,AK,Coldfoot,Coldfoot,2024,5985,5634,6.23,FAA 2024 commercial service enplanements workbook
+BKW,WV,Beckley,Raleigh County Memorial,2024,5918,4882,21.22,FAA 2024 commercial service enplanements workbook
+AQH,AK,Quinhagak,Quinhagak,2024,5733,5119,11.99,FAA 2024 commercial service enplanements workbook
+HNH,AK,Hoonah,Hoonah,2024,5667,5790,-2.12,FAA 2024 commercial service enplanements workbook
+LAF,IN,West Lafayette,Purdue University,2024,5647,2249,151.09,FAA 2024 commercial service enplanements workbook
+IRK,MO,Kirksville,Kirksville Regional,2024,5611,4281,31.07,FAA 2024 commercial service enplanements workbook
+DUJ,PA,Brookville,Dubois Regional,2024,5584,5568,0.29,FAA 2024 commercial service enplanements workbook
+ANI,AK,Aniak,Aniak,2024,5579,4707,18.53,FAA 2024 commercial service enplanements workbook
+ILI,AK,Iliamna,Iliamna,2024,5544,5749,-3.57,FAA 2024 commercial service enplanements workbook
+FYU,AK,Fort Yukon,Fort Yukon,2024,5492,5506,-0.25,FAA 2024 commercial service enplanements workbook
+VAK,AK,Chevak,Chevak,2024,5426,4704,15.35,FAA 2024 commercial service enplanements workbook
+MSS,NY,Massena,Massena International-Richards Field,2024,5375,4958,8.41,FAA 2024 commercial service enplanements workbook
+AUG,ME,Augusta,Augusta State,2024,5241,5354,-2.11,FAA 2024 commercial service enplanements workbook
+AOO,PA,Altoona,Altoona/Blair County,2024,5151,3231,59.42,FAA 2024 commercial service enplanements workbook
+IIK,AK,Kipnuk,Kipnuk,2024,4978,4466,11.46,FAA 2024 commercial service enplanements workbook
+SLK,NY,Saranac Lake,Adirondack Regional,2024,4930,4944,-0.28,FAA 2024 commercial service enplanements workbook
+MCE,CA,Merced,Merced Yosemite Regional,2024,4858,3798,27.91,FAA 2024 commercial service enplanements workbook
+HPB,AK,Hooper Bay,Hooper Bay,2024,4801,4314,11.29,FAA 2024 commercial service enplanements workbook
+SGY,AK,Skagway,Skagway,2024,4607,4953,-6.99,FAA 2024 commercial service enplanements workbook
+RUT,VT,Rutland,Rutland/Southern Vermont Regional,2024,4519,5228,-13.56,FAA 2024 commercial service enplanements workbook
+PKB,WV,Parkersburg,Mid-Ohio Valley Regional,2024,4356,4391,-0.8,FAA 2024 commercial service enplanements workbook
+SOV,AK,Seldovia,Seldovia,2024,4309,3381,27.45,FAA 2024 commercial service enplanements workbook
+KSM,AK,Saint Mary's,St Mary's,2024,4250,4912,-13.48,FAA 2024 commercial service enplanements workbook
+AIA,NE,Alliance,Alliance Municipal,2024,4207,4328,-2.8,FAA 2024 commercial service enplanements workbook
+IPL,CA,Imperial,Imperial County,2024,4183,7100,-41.08,FAA 2024 commercial service enplanements workbook
+LUP,HI,Kalaupapa,Kalaupapa,2024,4174,3085,35.3,FAA 2024 commercial service enplanements workbook
+WLK,AK,Selawik,Selawik,2024,4154,3974,4.53,FAA 2024 commercial service enplanements workbook
+UIN,IL,Quincy,Quincy Regional-Baldwin Field,2024,4112,4710,-12.7,FAA 2024 commercial service enplanements workbook
+CNM,NM,Carlsbad,Cavern City Air Terminal,2024,4076,5028,-18.93,FAA 2024 commercial service enplanements workbook
+WTK,AK,Noatak,Noatak,2024,4062,3698,9.84,FAA 2024 commercial service enplanements workbook
+HRO,AR,Harrison,Boone County,2024,4032,4565,-11.68,FAA 2024 commercial service enplanements workbook
+Z09,AK,Kasigluk,Kasigluk,2024,4028,3386,18.96,FAA 2024 commercial service enplanements workbook
+PHO,AK,Point Hope,Point Hope,2024,3998,4052,-1.33,FAA 2024 commercial service enplanements workbook
+BRL,IA,Burlington,Southeast Iowa Regional,2024,3951,4076,-3.07,FAA 2024 commercial service enplanements workbook
+MUE,HI,Kamuela,Waimea-Kohala,2024,3903,3598,8.48,FAA 2024 commercial service enplanements workbook
+BVK,AK,Buckland,Buckland,2024,3835,3615,6.09,FAA 2024 commercial service enplanements workbook
+SCM,AK,Scammon Bay,Scammon Bay,2024,3719,3583,3.8,FAA 2024 commercial service enplanements workbook
+D76,AK,Noorvik,Robert /Bob/ Curtis Memorial,2024,3715,3410,8.94,FAA 2024 commercial service enplanements workbook
+MOU,AK,Mountain Village,Mountain Village,2024,3678,3048,20.67,FAA 2024 commercial service enplanements workbook
+SOW,AZ,Show Low,Show Low Regional,2024,3655,3729,-1.98,FAA 2024 commercial service enplanements workbook
+MMH,CA,Mammoth Lakes,Mammoth Yosemite,2024,3632,3966,-8.42,FAA 2024 commercial service enplanements workbook
+KWT,AK,Kwethluk,Kwethluk,2024,3587,2614,37.22,FAA 2024 commercial service enplanements workbook
+CDB,AK,Cold Bay,Cold Bay,2024,3543,3023,17.2,FAA 2024 commercial service enplanements workbook
+BFD,PA,Bradford,Bradford Regional,2024,3521,3897,-9.65,FAA 2024 commercial service enplanements workbook
+A61,AK,Tuntutuliak,Tuntutuliak,2024,3474,3161,9.9,FAA 2024 commercial service enplanements workbook
+0AK,AK,Pilot Station,Pilot Station,2024,3469,3195,8.58,FAA 2024 commercial service enplanements workbook
+Z13,AK,Akiachak,Akiachak,2024,3448,3033,13.68,FAA 2024 commercial service enplanements workbook
+AUK,AK,Alakanuk,Alakanuk,2024,3430,2488,37.86,FAA 2024 commercial service enplanements workbook
+AWI,AK,Wainwright,Wainwright,2024,3416,3095,10.37,FAA 2024 commercial service enplanements workbook
+MKL,TN,Jackson,Jackson Regional,2024,3383,3264,3.65,FAA 2024 commercial service enplanements workbook
+AFE,AK,Kake,Kake,2024,3372,3605,-6.46,FAA 2024 commercial service enplanements workbook
+OOK,AK,Toksook Bay,Toksook Bay,2024,3342,3197,4.54,FAA 2024 commercial service enplanements workbook
+CFK,AK,Chefornak,Chefornak,2024,3330,2913,14.32,FAA 2024 commercial service enplanements workbook
+16A,AK,Nunapitchuk,Nunapitchuk,2024,3329,2845,17.01,FAA 2024 commercial service enplanements workbook
+HOT,AR,Hot Springs,Memorial Field,2024,3303,3727,-11.38,FAA 2024 commercial service enplanements workbook
+HLA,AK,Huslia,Huslia,2024,3291,3304,-0.39,FAA 2024 commercial service enplanements workbook
+SHH,AK,Shishmaref,Shishmaref,2024,3282,3477,-5.61,FAA 2024 commercial service enplanements workbook
+AKP,AK,Anaktuvuk Pass,Anaktuvuk Pass,2024,3255,3000,8.5,FAA 2024 commercial service enplanements workbook
+SVA,AK,Savoonga,Savoonga,2024,3199,3310,-3.35,FAA 2024 commercial service enplanements workbook
+OLF,MT,Wolf Point,L M Clayton,2024,3183,3153,0.95,FAA 2024 commercial service enplanements workbook
+HVR,MT,Havre,Havre City-County,2024,3095,2964,4.42,FAA 2024 commercial service enplanements workbook
+TOG,AK,Togiak,Togiak,2024,3082,2997,2.84,FAA 2024 commercial service enplanements workbook
+DUY,AK,Kongiganak,Kongiganak,2024,3077,2725,12.92,FAA 2024 commercial service enplanements workbook
+SDP,AK,Sand Point,Sand Point,2024,3075,2818,9.12,FAA 2024 commercial service enplanements workbook
+2A9,AK,Kotlik,Kotlik,2024,3069,2557,20.02,FAA 2024 commercial service enplanements workbook
+KVL,AK,Kivalina,Kivalina,2024,3039,3003,1.2,FAA 2024 commercial service enplanements workbook
+GGW,MT,Glasgow,Wokal Field/Glasgow-Valley County,2024,2970,2892,2.7,FAA 2024 commercial service enplanements workbook
+EEK,AK,Eek,Eek,2024,2920,2812,3.84,FAA 2024 commercial service enplanements workbook
+VDZ,AK,Valdez,Valdez Pioneer Field,2024,2874,4235,-32.14,FAA 2024 commercial service enplanements workbook
+BBG,MO,Branson,Branson,2024,2856,2607,9.55,FAA 2024 commercial service enplanements workbook
+GAM,AK,Gambell,Gambell,2024,2855,3142,-9.13,FAA 2024 commercial service enplanements workbook
+RSH,AK,Russian Mission,Russian Mission,2024,2807,2303,21.88,FAA 2024 commercial service enplanements workbook
+4A2,AK,Atmautluak,Atmautluak,2024,2733,2403,13.73,FAA 2024 commercial service enplanements workbook
+MKG,MI,Muskegon,Muskegon County,2024,2729,4521,-39.64,FAA 2024 commercial service enplanements workbook
+MDM,AK,Marshall,Marshall Don Hunter Sr,2024,2724,2514,8.35,FAA 2024 commercial service enplanements workbook
+MCK,NE,McCook,McCook Ben Nelson Regional,2024,2707,2329,16.23,FAA 2024 commercial service enplanements workbook
+MCG,AK,McGrath,McGrath,2024,2676,2575,3.92,FAA 2024 commercial service enplanements workbook
+AKI,AK,Akiak,Akiak,2024,2674,2367,12.97,FAA 2024 commercial service enplanements workbook
+HNM,HI,Hana,Hana,2024,2656,2085,27.39,FAA 2024 commercial service enplanements workbook
+TLT,AK,Tuluksak,Tuluksak,2024,2628,2242,17.22,FAA 2024 commercial service enplanements workbook
+GUP,NM,Gallup,Gallup Municipal,2024,2619,2184,19.92,FAA 2024 commercial service enplanements workbook
+ELD,AR,El Dorado,South Arkansas Regional at Goodwin Field,2024,2560,3144,-18.58,FAA 2024 commercial service enplanements workbook
+IAN,AK,Kiana,Bob Baker Memorial,2024,2555,2759,-7.39,FAA 2024 commercial service enplanements workbook
+GGV,AK,Kwigillingok,Kwigillingok,2024,2534,2241,13.07,FAA 2024 commercial service enplanements workbook
+KLG,AK,Upper Kalskag (native name: Kalskag),Kalskag,2024,2524,2029,24.4,FAA 2024 commercial service enplanements workbook
+YNG,OH,Youngstown,Youngstown/Warren Regional,2024,523,730,-28.36,FAA 2024 commercial service enplanements workbook
+77,,Small Count,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook
+31,,Large Count,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook
+32,,Medium Count,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook
+254,,Nonhub Count,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook
+119,,Nonprimary Commercial Service,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook
+394,,Total Primary Airports,,2024,0,0,0.0,FAA 2024 commercial service enplanements workbook

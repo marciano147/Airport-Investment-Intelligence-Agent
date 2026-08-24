@@ -23,9 +23,9 @@ if "last_response" not in st.session_state:
 with st.sidebar:
     st.subheader("Example Questions")
     examples = [
-        "Rank the top 5 New England airports for terminal expansion.",
-        "Compare BOS and BDL for capacity investment potential.",
-        "Why did the top airport score higher than the others?",
+        "Rank the top 5 US airports for terminal expansion.",
+        "Rank California airports for capacity investment potential.",
+        "Compare LAX and SNA congestion levels.",
         "What assumptions should I know before using this ranking?",
     ]
     for example in examples:

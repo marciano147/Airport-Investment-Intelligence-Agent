@@ -1,13 +1,19 @@
-Deterministic formula:
+Deterministic scoring methodology:
 
-Composite = (Congestion * 0.35) + (Growth * 0.30) + (Utilization * 0.25) + (Secondary * 0.10)
+Composite Score =
+  (Congestion Score * 0.35) +
+  (Passenger Growth Score * 0.30) +
+  (Utilization Score * 0.25) +
+  (Secondary Score * 0.10)
 
-All components are normalized to 0-100.
+All component scores must be normalized to 0-100 before weighting.
 
-Always return:
-- composite score
-- congestion score
-- growth score
-- utilization score
-- secondary score
-- short reason for the ranking
+Component definitions:
+- Congestion: Based on FAA delay minutes, ground stops, closures, or active delay advisories.
+- Passenger Growth: Year-over-year enplanement percentage change.
+- Utilization: Passenger volume relative to runway count and regional peer airports.
+- Secondary: Strategic secondary-market opportunity, defaulting to 50 only when unknown.
+
+Always show the full breakdown in answers, not just the final composite score.
+
+Higher composite means a stronger candidate for capacity-related investment.

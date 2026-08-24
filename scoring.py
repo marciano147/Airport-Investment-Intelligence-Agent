@@ -13,40 +13,42 @@ WEIGHTS = {
 }
 
 
-def clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
-    return max(low, min(high, value))
+def normalize(value: float, min_val: float = 0, max_val: float = 100) -> float:
+    """Clamp and scale a value to 0-100."""
+    if max_val == min_val:
+        return 50.0
 
-
-def normalize(value: Any, *, mode: str = "percent") -> float:
-    """Normalize values to 0-100.
-
-    Ratios between 0 and 1 are treated as percentages. Values already between
-    1 and 100 are treated as scores. Negative values score 0.
-    """
     try:
         number = float(value)
     except (TypeError, ValueError):
-        return 0.0
+        number = min_val
 
-    if mode == "growth":
-        # -5% -> 0, 0% -> 25, 10% -> 75, 15%+ -> 100.
-        return clamp(((number + 0.05) / 0.20) * 100)
-
-    if 0 <= number <= 1:
-        return clamp(number * 100)
-    return clamp(number)
+    scaled = (number - min_val) / (max_val - min_val) * 100
+    return max(0.0, min(100.0, scaled))
 
 
-def calculate_scores(airport_data: dict[str, Any]) -> dict[str, float]:
-    """Return weighted deterministic scores for one airport."""
-    congestion = normalize(airport_data.get("delay_score", 0))
-    growth = (
-        0.0
-        if "yoy_growth" not in airport_data
-        else normalize(airport_data.get("yoy_growth"), mode="growth")
-    )
-    utilization = normalize(airport_data.get("utilization", 0))
-    secondary = normalize(airport_data.get("secondary", 0))
+def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
+    """Calculate deterministic component and composite scores.
+
+    Expected values:
+    - `delay_minutes` or `delay_score`
+    - `yoy_growth` as percentage points, for example 8.5 for 8.5%
+    - `utilization` on a 0-100 scale
+    - `secondary` on a 0-100 scale
+    """
+    delay = airport.get("delay_score")
+    if delay is None:
+        delay = airport.get("delay_minutes", 15)
+    congestion = normalize(delay, 0, 60)
+
+    growth_pct = airport.get("yoy_growth", 3.0)
+    growth = normalize(growth_pct, -5, 20)
+
+    util = airport.get("utilization", 65)
+    utilization = normalize(util, 40, 95)
+
+    secondary_input = airport.get("secondary", 50)
+    secondary = normalize(secondary_input, 0, 100)
 
     composite = (
         congestion * WEIGHTS["congestion"]
@@ -64,11 +66,39 @@ def calculate_scores(airport_data: dict[str, Any]) -> dict[str, float]:
     }
 
 
-def rank_airports(airports: list[dict[str, Any]], top_n: int = 5) -> list[dict[str, Any]]:
-    """Score and rank airports by expansion potential."""
+def rank_airports(
+    airports: list[dict[str, Any]], top_n: int = 5
+) -> list[dict[str, Any]]:
+    """Rank airports by composite score and return top_n with full breakdown."""
     scored = []
     for airport in airports:
         scores = calculate_scores(airport)
         scored.append({**airport, **scores})
 
-    return sorted(scored, key=lambda item: item["composite"], reverse=True)[:top_n]
+    ranked = sorted(scored, key=lambda item: item["composite"], reverse=True)
+    return ranked[:top_n]
+
+
+def format_ranking(ranked: list[dict[str, Any]]) -> str:
+    """Format a markdown table with the full score breakdown."""
+    lines = [
+        "| Rank | IATA | Airport | Composite | Congestion | Growth | Utilization | Secondary |",
+        "|---:|---|---|---:|---:|---:|---:|---:|",
+    ]
+
+    for idx, airport in enumerate(ranked, start=1):
+        lines.append(
+            "| {rank} | {iata} | {name} | {composite:.1f} | {congestion:.1f} | "
+            "{growth:.1f} | {utilization:.1f} | {secondary:.1f} |".format(
+                rank=idx,
+                iata=airport.get("iata", "N/A"),
+                name=airport.get("name", airport.get("airport_name", "N/A")),
+                composite=airport["composite"],
+                congestion=airport["congestion"],
+                growth=airport["growth"],
+                utilization=airport["utilization"],
+                secondary=airport["secondary"],
+            )
+        )
+
+    return "\n".join(lines)
