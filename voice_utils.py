@@ -11,6 +11,12 @@ from groq import Groq
 load_dotenv()
 
 TRANSCRIPTION_MODEL = os.getenv("GROQ_TRANSCRIPTION_MODEL", "whisper-large-v3-turbo")
+TRANSCRIPTION_ERROR_PREFIX = "[Transcription error:"
+
+
+def transcription_succeeded(transcript: str) -> bool:
+    """Return true when Groq returned usable transcript text."""
+    return bool(transcript and not transcript.startswith(TRANSCRIPTION_ERROR_PREFIX))
 
 
 def transcribe_audio(audio_bytes: bytes, filename: str = "question.wav") -> str:

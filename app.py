@@ -17,7 +17,7 @@ from chat_store import (
     load_messages,
     save_message,
 )
-from voice_utils import transcribe_audio
+from voice_utils import transcribe_audio, transcription_succeeded
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -44,6 +44,10 @@ if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 if "replay_next" not in st.session_state:
     st.session_state.replay_next = False
+if "voice_input_version" not in st.session_state:
+    st.session_state.voice_input_version = 0
+if "voice_status" not in st.session_state:
+    st.session_state.voice_status = None
 
 
 def _start_new_conversation() -> None:
@@ -53,6 +57,8 @@ def _start_new_conversation() -> None:
     st.session_state.last_audio_hash = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = False
+    st.session_state.voice_input_version += 1
+    st.session_state.voice_status = None
 
 
 def _queue_user_message(content: str) -> None:
@@ -71,12 +77,60 @@ def _load_conversation(thread_id: str) -> None:
     st.session_state.last_audio_hash = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = True
+    st.session_state.voice_input_version += 1
+    st.session_state.voice_status = None
+
+
+def _render_voice_input() -> None:
+    st.subheader("Voice Input")
+    voice_status_slot = st.empty()
+    if st.session_state.voice_status:
+        status_kind, status_message = st.session_state.voice_status
+        if status_kind == "success":
+            voice_status_slot.success(status_message)
+        else:
+            voice_status_slot.error(status_message)
+
+    voice_slot = st.empty()
+    with voice_slot.container():
+        audio_data = st.audio_input(
+            "Record a voice question",
+            key=f"voice_input_{st.session_state.voice_input_version}",
+        )
+
+    if audio_data is None:
+        return
+
+    audio_bytes = audio_data.getvalue()
+    audio_hash = hashlib.sha256(audio_bytes).hexdigest()
+    if audio_hash == st.session_state.last_audio_hash:
+        return
+
+    st.session_state.last_audio_hash = audio_hash
+    with st.spinner("Transcribing with Groq Whisper..."):
+        transcript = transcribe_audio(audio_bytes)
+
+    if transcription_succeeded(transcript):
+        voice_slot.empty()
+        st.session_state.voice_input_version += 1
+        st.session_state.voice_status = ("success", f'Heard: "{transcript}"')
+        voice_status_slot.success(st.session_state.voice_status[1])
+        _queue_user_message(transcript)
+        return
+
+    message = transcript or "Transcription failed. Try recording again."
+    st.session_state.voice_status = ("error", message)
+    voice_status_slot.error(message)
+
 
 with st.sidebar:
     st.header("Controls")
     if st.button("New Conversation", use_container_width=True):
         _start_new_conversation()
         st.rerun()
+
+    st.divider()
+    _render_voice_input()
 
     conversations = list_conversations()
     if conversations:
@@ -139,24 +193,6 @@ with st.sidebar:
 
 for message in st.session_state.messages:
     st.chat_message(message["role"]).write(message["content"])
-
-
-with st.container():
-    st.subheader("Voice Input")
-    audio_data = st.audio_input("Record a voice question", key="voice_input")
-    if audio_data is not None:
-        audio_bytes = audio_data.getvalue()
-        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
-        if audio_hash != st.session_state.last_audio_hash:
-            st.session_state.last_audio_hash = audio_hash
-            with st.spinner("Transcribing with Groq Whisper..."):
-                transcript = transcribe_audio(audio_bytes)
-            if transcript and not transcript.startswith("[Transcription error:"):
-                st.caption(f'Heard: "{transcript}"')
-                _queue_user_message(transcript)
-                st.rerun()
-            else:
-                st.error(transcript or "Transcription failed. Try recording again.")
 
 
 def _content_from_response(response: dict[str, Any]) -> str:

@@ -18,3 +18,11 @@ def test_app_renders_core_chat_controls(monkeypatch, tmp_path):
     assert any("New England" in button.label for button in app.button)
     assert any("Voice Input" in subheader.value for subheader in app.subheader)
     assert app.chat_input[0].placeholder == "Ask about airport investment opportunities..."
+
+
+def test_voice_transcript_path_does_not_force_immediate_rerun():
+    source = APP_PATH.read_text(encoding="utf-8")
+
+    risky_pattern = '_queue_user_message(transcript)\n                st.rerun()'
+
+    assert risky_pattern not in source

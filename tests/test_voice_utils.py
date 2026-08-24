@@ -51,3 +51,9 @@ def test_transcribe_audio_returns_visible_error_on_groq_failure(monkeypatch):
     result = voice_utils.transcribe_audio(b"audio-bytes")
 
     assert result == "[Transcription error: service unavailable]"
+
+
+def test_transcription_succeeded_distinguishes_text_from_error():
+    assert voice_utils.transcription_succeeded("Hello, error error.")
+    assert not voice_utils.transcription_succeeded("")
+    assert not voice_utils.transcription_succeeded("[Transcription error: bad audio]")
