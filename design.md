@@ -111,7 +111,7 @@ Deterministic code is used for:
 - FAA NAS Status is a current traffic-management-program signal, not a full historical congestion model. It often returns no active program even for busy airports. Baseline congestion tiers are a deterministic fallback for one-day scope, not a substitute for historical OPSNET, ASPM, or BTS ASQP delay data.
 - Long-haul share uses a transparent proxy because free route-level schedule data is limited.
 - Utilization is based on passengers per runway. A production model should include BTS T-100 seats/departures, declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
-- Voice input is submit-after-recording, not a streaming voice assistant. That keeps the bonus feature simple and reviewable.
+- Voice input uses `streamlit-mic-recorder` instead of native `st.audio_input`, which can error when MediaRecorder stops. Stopping a clip auto-sends it through Whisper. This is still submit-after-recording, not a streaming voice assistant.
 - The score is simple by design so reviewers can reproduce and challenge it.
 
 ## Assumptions and Limitations

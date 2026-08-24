@@ -71,6 +71,10 @@ st.markdown(
     div[class*="st-key-delete-"] button:focus {
         box-shadow: 0 0 0 0.12rem rgba(185, 28, 28, 0.24);
     }
+    section[data-testid="stSidebar"] [data-testid="stCustomComponentV1"] iframe {
+        height: 42px !important;
+        min-height: 42px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -91,6 +95,8 @@ if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
 if "last_audio_hash" not in st.session_state:
     st.session_state.last_audio_hash = None
+if "last_voice_recording_id" not in st.session_state:
+    st.session_state.last_voice_recording_id = None
 if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 if "replay_next" not in st.session_state:
@@ -114,6 +120,7 @@ def _start_new_conversation() -> None:
     st.session_state.last_response = None
     st.session_state.last_request_diagnostics = None
     st.session_state.last_audio_hash = None
+    st.session_state.last_voice_recording_id = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = False
     st.session_state.voice_input_version += 1
@@ -139,6 +146,7 @@ def _load_conversation(thread_id: str) -> None:
     st.session_state.last_response = None
     st.session_state.last_request_diagnostics = None
     st.session_state.last_audio_hash = None
+    st.session_state.last_voice_recording_id = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = True
     st.session_state.voice_input_version += 1
@@ -169,8 +177,9 @@ def _record_voice_event(event: str, **fields: Any) -> None:
 
 
 def _render_voice_input() -> None:
-    """Render sidebar voice recording and submit transcript as normal chat text."""
-    st.subheader("Voice Input")
+    """Record in the sidebar and auto-send the transcript as normal chat text."""
+    st.subheader("Voice")
+    st.caption("Click record, speak, then stop. We transcribe and send it automatically.")
     voice_status_slot = st.empty()
     if st.session_state.voice_status:
         status_kind, status_message = st.session_state.voice_status
@@ -179,46 +188,64 @@ def _render_voice_input() -> None:
         else:
             voice_status_slot.error(status_message)
 
-    # Native `st.audio_input` can enter a browser-side error state when
-    # MediaRecorder stops. This component returns WAV bytes directly and keeps
-    # recording separate from the explicit Send Voice action.
+    # Native `st.audio_input` can show "An error has occurred" when MediaRecorder
+    # stops. Keep streamlit-mic-recorder, but submit as soon as a new clip arrives
+    # so the user does not need a second Send Voice button.
     recorder_output = mic_recorder(
-        start_prompt="Start recording",
-        stop_prompt="Stop recording",
+        start_prompt="🎤 Record",
+        stop_prompt="⏹ Stop & send",
         just_once=False,
         use_container_width=True,
         format="wav",
         key=f"voice_input_{st.session_state.voice_input_version}",
     )
     audio_bytes = None
+    recording_id = None
     if isinstance(recorder_output, dict):
         audio_bytes = recorder_output.get("bytes")
+        recording_id = recorder_output.get("id")
 
-    send_voice = st.button("Send Voice", use_container_width=True, key="send_voice")
-
-    if not send_voice:
-        return
+    retry_requested = False
+    if (
+        st.session_state.voice_status
+        and st.session_state.voice_status[0] == "error"
+        and audio_bytes
+    ):
+        retry_requested = st.button(
+            "Retry transcription",
+            use_container_width=True,
+            key="retry_voice",
+        )
 
     if not audio_bytes:
-        message = "Record a voice question before sending."
-        st.session_state.voice_status = ("error", message)
-        _record_voice_event("submit_without_audio")
-        voice_status_slot.error(message)
         return
 
     audio_hash = hashlib.sha256(audio_bytes).hexdigest()
-    if audio_hash == st.session_state.last_audio_hash:
-        _record_voice_event("duplicate_audio_ignored", hash=audio_hash[:12])
+    already_handled = (
+        audio_hash == st.session_state.last_audio_hash
+        or (
+            recording_id is not None
+            and recording_id == st.session_state.last_voice_recording_id
+        )
+    )
+    if already_handled and not retry_requested:
         return
 
-    _record_voice_event("transcription_started", bytes=len(audio_bytes), hash=audio_hash[:12])
+    _record_voice_event(
+        "transcription_started",
+        bytes=len(audio_bytes),
+        hash=audio_hash[:12],
+        retry=retry_requested,
+    )
     with st.spinner("Transcribing with Groq Whisper..."):
         transcript = transcribe_audio(audio_bytes, filename="question.wav")
 
+    # Remember this clip after either outcome so Streamlit reruns do not loop
+    # transcription. Failed clips stay mounted for Retry transcription.
+    st.session_state.last_audio_hash = audio_hash
+    st.session_state.last_voice_recording_id = recording_id
+
     if transcription_succeeded(transcript):
-        # Mark the audio as processed only after Whisper succeeds. Failed
-        # transcriptions can be retried with the same recording.
-        st.session_state.last_audio_hash = audio_hash
         # Reset the recorder only after the assistant response is saved. Resetting
         # during recorder completion can produce Streamlit's transient audio error.
         st.session_state.voice_input_version += 1

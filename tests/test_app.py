@@ -16,7 +16,11 @@ def test_app_renders_core_chat_controls(monkeypatch, tmp_path):
     assert "Powered by Groq" in app.caption[0].value
     assert any(button.label == "New Conversation" for button in app.button)
     assert any("New England" in button.label for button in app.button)
-    assert any("Voice Input" in subheader.value for subheader in app.subheader)
+    assert any(subheader.value == "Voice" for subheader in app.subheader)
+    assert any(
+        "transcribe and send it automatically" in caption.value
+        for caption in app.caption
+    )
     assert any(
         checkbox.label == "Replay full saved chat history"
         for checkbox in app.checkbox
@@ -32,7 +36,7 @@ def test_voice_transcript_path_does_not_force_immediate_rerun():
     assert risky_pattern not in source
 
 
-def test_voice_input_uses_dedicated_recorder_and_button():
+def test_voice_input_auto_sends_without_native_audio_widget():
     source = APP_PATH.read_text(encoding="utf-8")
 
     # Native Streamlit recorder caused the browser-side completion error.
@@ -41,14 +45,17 @@ def test_voice_input_uses_dedicated_recorder_and_button():
     # Dedicated recorder should be used instead.
     assert "from streamlit_mic_recorder import mic_recorder" in source
     assert "mic_recorder(" in source
+    assert 'start_prompt="🎤 Record"' in source
+    assert 'stop_prompt="⏹ Stop & send"' in source
 
     # WAV is sent directly to the existing Whisper pipeline.
     assert 'format="wav"' in source
     assert 'filename="question.wav"' in source
 
-    # Recording and submission remain separate actions.
-    assert 'st.button(' in source
-    assert '"Send Voice"' in source
+    # Stopping the clip submits it; there is no extra Send Voice step.
+    assert '"Send Voice"' not in source
+    assert "Retry transcription" in source
+    assert "already_handled" in source
 
     # Existing voice diagnostics/reset lifecycle remain enabled.
     assert "_record_voice_event" in source

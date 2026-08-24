@@ -34,6 +34,7 @@
 - [x] Move voice recorder out of Streamlit form lifecycle and add voice event logs.
 - [x] Add per-conversation delete controls in chat history.
 - [x] Upgrade congestion to parse FAA NAS Status delay minutes before falling back to hub baselines.
+- [x] Auto-send voice recordings on stop and keep the custom recorder instead of native `st.audio_input`.
 
 ## Verification
 
