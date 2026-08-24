@@ -71,6 +71,7 @@ Edit `.env`:
 
 ```bash
 LLM_PROVIDER=groq
+LLM_FALLBACK_ENABLED=true
 LLM_MAX_TOKENS=1200
 LLM_TIMEOUT_SECONDS=45
 
@@ -80,7 +81,7 @@ GROQ_REASONING_FORMAT=hidden
 GROQ_REASONING_EFFORT=low
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 
-# Optional OpenRouter fallback
+# Automatic OpenRouter fallback
 OPENROUTER_API_KEY=sk-or-your-key-here
 OPENROUTER_MODEL=liquid/lfm-2.5-2.6b:free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
@@ -90,7 +91,9 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 
 Create a Groq key at `https://console.groq.com/keys`.
 
-To use OpenRouter for chat while keeping Groq Whisper for voice transcription:
+When both `GROQ_API_KEY` and `OPENROUTER_API_KEY` are set, the agent tries Groq first and automatically falls back to OpenRouter for chat if Groq hits a quota, timeout, or request-size limit. Groq Whisper still handles voice transcription.
+
+To force OpenRouter as the primary chat provider:
 
 ```bash
 LLM_PROVIDER=openrouter

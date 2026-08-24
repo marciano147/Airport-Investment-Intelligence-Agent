@@ -17,6 +17,7 @@ def test_agent_uses_memory_checkpointer():
 def test_agent_defaults_to_groq_model():
     assert agent.MODEL == "openai/gpt-oss-20b"
     assert agent.PROVIDER == "groq"
+    assert agent.FALLBACK_ENABLED is True
     assert agent.REASONING_FORMAT == "hidden"
     assert agent.REASONING_EFFORT == "low"
     assert agent.MAX_TOKENS == 1200
@@ -51,8 +52,10 @@ def test_provider_diagnostics_are_safe_metadata():
         replay_mode="full_saved_history",
     )
 
-    assert diagnostics["provider"] == "groq"
+    assert diagnostics["configured_provider"] == "groq"
+    assert diagnostics["active_provider"] == "groq"
     assert diagnostics["model"] == "openai/gpt-oss-20b"
+    assert diagnostics["fallback_enabled"] is True
     assert diagnostics["message_count_sent"] == 3
     assert diagnostics["replay_mode"] == "full_saved_history"
     assert "api" not in diagnostics
@@ -102,6 +105,7 @@ def test_invoke_agent_messages_retries_rate_limits(monkeypatch):
 
 def test_invoke_agent_messages_does_not_retry_daily_quota(monkeypatch):
     calls = {"count": 0}
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
 
     class FakeAgent:
         def invoke(self, payload, config):
@@ -118,6 +122,34 @@ def test_invoke_agent_messages_does_not_retry_daily_quota(monkeypatch):
         raise AssertionError("Expected daily quota error")
 
     assert calls["count"] == 1
+
+
+def test_invoke_agent_messages_falls_back_to_openrouter(monkeypatch):
+    calls = {"groq": 0, "openrouter": 0}
+
+    class FailingGroqAgent:
+        def invoke(self, payload, config):
+            calls["groq"] += 1
+            raise RuntimeError("rate limit reached on tokens per day")
+
+    class FallbackAgent:
+        def invoke(self, payload, config):
+            calls["openrouter"] += 1
+            calls["payload"] = payload
+            calls["config"] = config
+            return {"messages": [AIMessage(content="fallback answer")]}
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-openrouter-key")
+    monkeypatch.setattr(agent, "get_agent", lambda: FailingGroqAgent())
+    monkeypatch.setattr(agent, "get_openrouter_agent", lambda: FallbackAgent())
+
+    response = agent.invoke_agent_messages([("user", "Rank airports")], "thread-fb")
+
+    assert agent.response_content(response) == "fallback answer"
+    assert calls["groq"] == 1
+    assert calls["openrouter"] == 1
+    assert calls["payload"] == {"messages": [("user", "Rank airports")]}
+    assert calls["config"] == {"configurable": {"thread_id": "thread-fb-openrouter"}}
 
 
 def test_format_agent_error_for_daily_quota():
