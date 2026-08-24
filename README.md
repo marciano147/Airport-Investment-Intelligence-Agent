@@ -26,12 +26,38 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 
 ## Setup
 
+This is a Python project. Do not run `npm i`.
+
+Prerequisites: Python 3.11+ (3.12 works). Create a virtual environment, install `requirements.txt`, then copy `.env.example` to `.env`.
+
+**Windows (PowerShell):**
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+```
+
+**Windows (Git Bash):**
+
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+**macOS / Linux:**
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
+
+The venv must stay activated for `streamlit`, `pytest`, and `pip`. If you open a new terminal, activate it again.
 
 Edit `.env`:
 
@@ -66,11 +92,34 @@ Airport and runway caches can refresh automatically if missing. The enplanement 
 
 ## Run
 
+With the venv activated:
+
 ```bash
 streamlit run app.py
 ```
 
+If `streamlit` is not on your PATH, call it from the venv:
+
+```bash
+# Windows
+.venv\Scripts\streamlit.exe run app.py
+
+# macOS / Linux
+.venv/bin/streamlit run app.py
+```
+
 The sidebar includes a microphone recorder. After recording, the app transcribes the audio and submits the transcript as a normal chat message.
+
+## Troubleshooting
+
+**`streamlit: command not found`**  
+The venv is not activated, or Streamlit is not installed in it. Activate `.venv`, then run `pip install -r requirements.txt`. On Windows Git Bash the activate script is `source .venv/Scripts/activate`, not `source .venv/bin/activate`.
+
+**`ModuleNotFoundError: No module named 'langchain_groq'`** (or another package from `requirements.txt`)  
+Dependencies were not fully installed. With the venv activated, run `pip install -r requirements.txt`, then refresh the Streamlit page or restart the server.
+
+**`npm i` / Node**  
+There is no `package.json`. Install with `pip`, not npm.
 
 ## Test
 

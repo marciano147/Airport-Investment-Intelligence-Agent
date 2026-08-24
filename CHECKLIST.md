@@ -21,6 +21,7 @@
 - [x] Add Streamlit voice input with Groq Whisper transcription.
 - [x] Document LangSmith EU endpoint for tracing.
 - [x] Add README and design document.
+- [x] Document Windows venv activation, pip install, and common local-run errors.
 - [x] Add tests for scoring and data assembly.
 - [x] Add CI-safe tests for tools, prompts, voice, app render, and edge cases.
 - [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
