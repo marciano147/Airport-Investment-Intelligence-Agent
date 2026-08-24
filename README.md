@@ -74,9 +74,19 @@ The sidebar includes a microphone recorder. After recording, the app transcribes
 
 ## Test
 
+Offline tests do not call Groq, LangSmith, FAA, or Streamlit over the network:
+
 ```bash
 pytest tests/ -v
 ```
+
+Opt-in live smoke checks use `.env` and real services:
+
+```bash
+python scripts/live_smoke.py
+```
+
+The live smoke script checks Groq model access, one agent query, LangSmith access, Groq Whisper transcription, and Streamlit health.
 
 ## Example Questions
 
@@ -101,6 +111,7 @@ voice_utils.py  Groq Whisper transcription helper
 prompts.py      Hermes-style context loader
 context/        SOUL, TOOLS, SCORING, ASSUMPTIONS, and WRITING prompts
 tests/          Unit tests
+scripts/        Opt-in live smoke checks
 design.md       Architecture and scoring notes
 ```
 

@@ -22,6 +22,8 @@
 - [x] Document LangSmith EU endpoint for tracing.
 - [x] Add README and design document.
 - [x] Add tests for scoring and data assembly.
+- [x] Add CI-safe tests for tools, prompts, voice, app render, and edge cases.
+- [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
 
 ## Verification
 
@@ -34,6 +36,5 @@
 - [ ] Automate FAA enplanement workbook refresh and schema validation.
 - [ ] Add BTS T-100 route or operations data for a stronger utilization signal.
 - [ ] Replace static long-haul proxy with BTS T-100 or schedule data.
-- [ ] Add end-to-end mocked agent tests that do not call Groq.
 - [ ] Add CI for pytest and import checks.
-- [ ] Add screenshots or a short demo script for the take-home review.
+- [ ] Add screenshots for the take-home review.

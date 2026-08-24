@@ -43,6 +43,37 @@ def test_ranking_order_and_top_n():
     assert len(ranked) == 2
 
 
+def test_rank_airports_handles_empty_and_large_top_n():
+    assert rank_airports([]) == []
+
+    airports = [
+        {"iata": "A", "delay_minutes": 10},
+        {"iata": "B", "delay_minutes": 20},
+    ]
+
+    assert len(rank_airports(airports, top_n=10)) == 2
+
+
+def test_delay_score_takes_precedence_and_bad_inputs_clamp():
+    scores = calculate_scores(
+        {
+            "delay_score": 30,
+            "delay_minutes": 60,
+            "yoy_growth": "bad",
+            "utilization": None,
+            "secondary": "bad",
+        }
+    )
+
+    assert scores == {
+        "composite": 17.5,
+        "congestion": 50.0,
+        "growth": 0.0,
+        "utilization": 0.0,
+        "secondary": 0.0,
+    }
+
+
 def test_normalize_bounds():
     assert normalize(-1) == 0.0
     assert normalize(50) == 50.0
@@ -69,3 +100,11 @@ def test_format_ranking_includes_full_breakdown():
     assert "Composite" in table
     assert "Secondary" in table
     assert "BOS" in table
+
+
+def test_format_ranking_with_empty_list_still_returns_headers():
+    table = format_ranking([])
+
+    assert "Rank" in table
+    assert "Composite" in table
+    assert "BOS" not in table

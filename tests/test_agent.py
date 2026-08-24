@@ -34,3 +34,25 @@ def test_response_content_extracts_last_message():
     response = {"messages": [AIMessage(content="first"), AIMessage(content="final")]}
 
     assert agent.response_content(response) == "final"
+
+
+def test_response_content_handles_empty_messages():
+    assert agent.response_content({"messages": []}) == "No response returned."
+
+
+def test_run_agent_invokes_configured_thread(monkeypatch):
+    calls = {}
+
+    class FakeAgent:
+        def invoke(self, payload, config):
+            calls["payload"] = payload
+            calls["config"] = config
+            return {"messages": [AIMessage(content="ranked")]}
+
+    monkeypatch.setattr(agent, "get_agent", lambda: FakeAgent())
+
+    result = agent.run_agent("Rank airports", thread_id="thread-123")
+
+    assert result == "ranked"
+    assert calls["payload"] == {"messages": [("user", "Rank airports")]}
+    assert calls["config"] == {"configurable": {"thread_id": "thread-123"}}
