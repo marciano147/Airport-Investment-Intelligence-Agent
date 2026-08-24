@@ -21,7 +21,7 @@ def test_agent_defaults_to_groq_model():
     assert agent.REASONING_FORMAT == "hidden"
     assert agent.REASONING_EFFORT == "low"
     assert agent.MAX_TOKENS == 1200
-    assert agent.OPENROUTER_MODEL == "openrouter/free"
+    assert agent.OPENROUTER_MODEL == "nvidia/nemotron-3.5-lightning:free"
 
 
 def test_get_agent_requires_groq_key(monkeypatch):
@@ -44,6 +44,36 @@ def test_response_content_extracts_last_message():
 
 def test_response_content_handles_empty_messages():
     assert agent.response_content({"messages": []}) == "No response returned."
+
+
+def test_response_content_strips_xml_thinking_blocks():
+    response = {"messages": [AIMessage(content="<think>hidden reasoning</think>Final answer.")]}
+
+    assert agent.response_content(response) == "Final answer."
+
+
+def test_response_content_replaces_leaked_thinking_process_without_answer():
+    leaked = """Here's a thinking process:
+
+1. Analyze User Input
+2. Determine Tool Calls
+"""
+    response = {"messages": [AIMessage(content=leaked)]}
+
+    assert agent.response_content(response) == (
+        "I need to rerun that answer with a model that does not expose internal reasoning."
+    )
+
+
+def test_response_content_keeps_final_answer_after_leaked_thinking():
+    leaked = """Here's a thinking process:
+
+1. Analyze User Input
+</thinking>
+JFK is stronger for passenger terminal investment, while ANC is more specialized."""
+    response = {"messages": [AIMessage(content=leaked)]}
+
+    assert agent.response_content(response).startswith("JFK is stronger")
 
 
 def test_provider_diagnostics_are_safe_metadata():

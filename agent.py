@@ -33,7 +33,7 @@ load_dotenv()
 # invent rankings or calculate scores itself.
 PROVIDER = os.getenv("LLM_PROVIDER", "groq").strip().lower()
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/free")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning:free")
 MODEL = OPENROUTER_MODEL if PROVIDER == "openrouter" else GROQ_MODEL
 FALLBACK_ENABLED = os.getenv("LLM_FALLBACK_ENABLED", "true").strip().lower() == "true"
 MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", os.getenv("GROQ_MAX_TOKENS", "1200")))
@@ -157,7 +157,53 @@ def response_content(response: dict) -> str:
     messages = response.get("messages", [])
     if not messages:
         return "No response returned."
-    return getattr(messages[-1], "content", str(messages[-1]))
+    content = getattr(messages[-1], "content", str(messages[-1]))
+    return sanitize_response_content(content)
+
+
+def sanitize_response_content(content: Any) -> str:
+    """Strip leaked reasoning traces from provider-visible message content."""
+    text = str(content or "").strip()
+    if not text:
+        return text
+
+    # Some free router models can emit chain-of-thought as normal text. Remove
+    # the obvious wrapper formats before saving or rendering the assistant turn.
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<thinking>.*?</thinking>", "", text, flags=re.IGNORECASE | re.DOTALL)
+
+    lower = text.lower()
+    leak_markers = [
+        "here's a thinking process",
+        "here is a thinking process",
+        "analyze user input",
+        "identify what's needed",
+        "determine tool calls",
+    ]
+    if any(marker in lower for marker in leak_markers):
+        fallback = _extract_after_reasoning_leak(text)
+        return fallback.strip() if fallback else (
+            "I need to rerun that answer with a model that does not expose internal reasoning."
+        )
+
+    return text.strip()
+
+
+def _extract_after_reasoning_leak(text: str) -> str:
+    """Keep only the apparent final answer after a leaked reasoning preface."""
+    markers = [
+        r"</thinking>",
+        r"</think>",
+        r"\bfinal answer\s*[:\-]",
+        r"\banswer\s*[:\-]",
+    ]
+    for marker in markers:
+        matches = list(re.finditer(marker, text, flags=re.IGNORECASE))
+        if matches:
+            tail = text[matches[-1].end() :].strip()
+            if tail:
+                return tail
+    return ""
 
 
 def invoke_agent_messages(
