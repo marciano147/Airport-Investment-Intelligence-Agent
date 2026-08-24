@@ -11,6 +11,7 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 - Estimate long-haul or international share with a labeled proxy table.
 - Answer follow-up questions through LangGraph conversation memory.
 - Record a voice question in Streamlit and transcribe it with Groq Whisper.
+- Reopen and export past conversations from local SQLite chat history.
 - Show assumptions, data limits, and score breakdowns.
 - Inspect raw agent responses in the Streamlit debug panel.
 - Enable LangSmith tracing for tool and LLM review.
@@ -108,7 +109,7 @@ If `streamlit` is not on your PATH, call it from the venv:
 .venv/bin/streamlit run app.py
 ```
 
-The sidebar includes a microphone recorder. After recording, the app transcribes the audio and submits the transcript as a normal chat message.
+Voice input appears above the chat box. After recording, the app transcribes the audio and submits the transcript as a normal chat message. Past conversations appear in the sidebar and are stored locally in `data/chat_history.db`; when you reopen one, the saved context is replayed on the next message so follow-ups still work.
 
 ## Troubleshooting
 
@@ -152,6 +153,7 @@ The live smoke script checks Groq model access, one agent query, LangSmith acces
 ```text
 app.py          Streamlit chat UI and debug panel
 agent.py        LangGraph agent, tool registry, and memory helper
+chat_store.py   SQLite conversation history store
 tools.py        LangChain tools for rankings, comparisons, long-haul, and airport data
 data_loader.py  Cached public data loading and candidate assembly
 scoring.py      Deterministic scoring model

@@ -10,6 +10,13 @@ from typing import Any
 import streamlit as st
 
 from agent import get_agent, response_content
+from chat_store import (
+    export_messages_json,
+    init_store,
+    list_conversations,
+    load_messages,
+    save_message,
+)
 from voice_utils import transcribe_audio
 
 
@@ -23,6 +30,8 @@ st.set_page_config(
 st.title("Airport Investment Intelligence Agent")
 st.caption("Identify promising US airports for terminal and capacity modernization. Powered by Groq.")
 
+init_store()
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_response" not in st.session_state:
@@ -31,15 +40,68 @@ if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
 if "last_audio_hash" not in st.session_state:
     st.session_state.last_audio_hash = None
+if "pending_prompt" not in st.session_state:
+    st.session_state.pending_prompt = None
+if "replay_next" not in st.session_state:
+    st.session_state.replay_next = False
+
+
+def _start_new_conversation() -> None:
+    st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
+    st.session_state.messages = []
+    st.session_state.last_response = None
+    st.session_state.last_audio_hash = None
+    st.session_state.pending_prompt = None
+    st.session_state.replay_next = False
+
+
+def _queue_user_message(content: str) -> None:
+    st.session_state.pending_prompt = content
+
+
+def _append_and_save(role: str, content: str) -> None:
+    st.session_state.messages.append({"role": role, "content": content})
+    save_message(st.session_state.thread_id, role, content)
+
+
+def _load_conversation(thread_id: str) -> None:
+    st.session_state.thread_id = thread_id
+    st.session_state.messages = load_messages(thread_id)
+    st.session_state.last_response = None
+    st.session_state.last_audio_hash = None
+    st.session_state.pending_prompt = None
+    st.session_state.replay_next = True
 
 with st.sidebar:
     st.header("Controls")
     if st.button("New Conversation", use_container_width=True):
-        st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
-        st.session_state.messages = []
-        st.session_state.last_response = None
-        st.session_state.last_audio_hash = None
+        _start_new_conversation()
         st.rerun()
+
+    conversations = list_conversations()
+    if conversations:
+        st.divider()
+        st.subheader("Chat History")
+        for conversation in conversations:
+            is_current = conversation["thread_id"] == st.session_state.thread_id
+            label = conversation["title"]
+            if is_current:
+                label = f"{label} (current)"
+            if st.button(
+                label,
+                use_container_width=True,
+                key=f"history-{conversation['thread_id']}",
+            ):
+                _load_conversation(conversation["thread_id"])
+                st.rerun()
+
+        st.download_button(
+            "Export Current Chat",
+            data=export_messages_json(st.session_state.thread_id),
+            file_name=f"{st.session_state.thread_id}.json",
+            mime="application/json",
+            use_container_width=True,
+        )
 
     st.divider()
     st.subheader("Example Questions")
@@ -54,25 +116,8 @@ with st.sidebar:
     ]
     for example in examples:
         if st.button(example, use_container_width=True, key=f"example-{example}"):
-            st.session_state.messages.append({"role": "user", "content": example})
+            _queue_user_message(example)
             st.rerun()
-
-    st.divider()
-    st.subheader("Voice Input (Bonus)")
-    audio_data = st.audio_input("Record your question")
-    if audio_data is not None:
-        audio_bytes = audio_data.read()
-        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
-        if audio_hash != st.session_state.last_audio_hash:
-            st.session_state.last_audio_hash = audio_hash
-            with st.spinner("Transcribing with Groq Whisper..."):
-                transcript = transcribe_audio(audio_bytes)
-            if transcript and not transcript.startswith("[Transcription error:"):
-                st.caption(f'Heard: "{transcript}"')
-                st.session_state.messages.append({"role": "user", "content": transcript})
-                st.rerun()
-            else:
-                st.error(transcript or "Transcription failed.")
 
     st.divider()
     st.subheader("Debug / Monitoring")
@@ -96,22 +141,53 @@ for message in st.session_state.messages:
     st.chat_message(message["role"]).write(message["content"])
 
 
+with st.container():
+    st.subheader("Voice Input")
+    audio_data = st.audio_input("Record a voice question", key="voice_input")
+    if audio_data is not None:
+        audio_bytes = audio_data.getvalue()
+        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
+        if audio_hash != st.session_state.last_audio_hash:
+            st.session_state.last_audio_hash = audio_hash
+            with st.spinner("Transcribing with Groq Whisper..."):
+                transcript = transcribe_audio(audio_bytes)
+            if transcript and not transcript.startswith("[Transcription error:"):
+                st.caption(f'Heard: "{transcript}"')
+                _queue_user_message(transcript)
+                st.rerun()
+            else:
+                st.error(transcript or "Transcription failed. Try recording again.")
+
+
 def _content_from_response(response: dict[str, Any]) -> str:
     return response_content(response)
 
 
 if prompt := st.chat_input("Ask about airport investment opportunities..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+    _queue_user_message(prompt)
+
+if st.session_state.pending_prompt:
+    pending = st.session_state.pending_prompt
+    st.session_state.pending_prompt = None
+    _append_and_save("user", pending)
+    st.chat_message("user").write(pending)
 
 if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
         with st.spinner("Analyzing airport data..."):
             try:
                 latest_user_message = st.session_state.messages[-1]
+                if st.session_state.replay_next:
+                    input_messages = [
+                        {"role": message["role"], "content": message["content"]}
+                        for message in st.session_state.messages
+                    ]
+                    st.session_state.replay_next = False
+                else:
+                    input_messages = [latest_user_message]
                 agent = get_agent()
                 response = agent.invoke(
-                    {"messages": [latest_user_message]},
+                    {"messages": input_messages},
                     config={"configurable": {"thread_id": st.session_state.thread_id}},
                 )
                 st.session_state.last_response = {
@@ -130,4 +206,4 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                 st.session_state.last_response = {"error": str(exc)}
 
         st.markdown(content)
-        st.session_state.messages.append({"role": "assistant", "content": content})
+        _append_and_save("assistant", content)

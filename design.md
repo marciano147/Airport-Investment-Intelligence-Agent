@@ -21,6 +21,7 @@ Main files:
 
 - `app.py`: Streamlit chat UI, example prompts, new-conversation control, and debug panel.
 - `agent.py`: LangGraph ReAct agent, Groq model setup, tool registry, and `MemorySaver` checkpointing.
+- `chat_store.py`: SQLite conversation list, message persistence, and JSON export.
 - `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, and long-haul estimates.
 - `data_loader.py`: public data caches, region/state handling, runway counts, and expansion candidate assembly.
 - `scoring.py`: deterministic score calculation and ranking.
@@ -92,6 +93,7 @@ Deterministic code is used for:
 - Tools return structured error payloads or fallback notes instead of failing silently.
 - Streamlit can show raw agent responses in the debug panel.
 - LangGraph memory uses a thread ID per Streamlit conversation.
+- SQLite chat history stores prior conversations so the sidebar can restore them after refresh or restart. Restored conversations replay saved messages once on the next user turn so follow-up questions keep context even after process memory is gone.
 - LangSmith tracing can be enabled through `.env` to inspect LLM steps and tool calls.
 - Voice transcription returns visible errors instead of sending failed transcripts into the agent.
 

@@ -26,6 +26,7 @@
 - [x] Add CI-safe tests for tools, prompts, voice, app render, and edge cases.
 - [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
 - [x] Add compute-layer caches and tool timing logs.
+- [x] Add persistent SQLite chat history and move voice input near the chat box.
 
 ## Verification
 

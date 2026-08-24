@@ -6,7 +6,9 @@ from streamlit.testing.v1 import AppTest
 APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
 
 
-def test_app_renders_core_chat_controls():
+def test_app_renders_core_chat_controls(monkeypatch, tmp_path):
+    monkeypatch.setattr("chat_store.DB_PATH", tmp_path / "chat_history.db")
+
     app = AppTest.from_file(APP_PATH).run(timeout=5)
 
     assert not app.exception
