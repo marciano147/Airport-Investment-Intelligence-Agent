@@ -212,10 +212,10 @@ with st.sidebar:
         for conversation in conversations:
             is_current = conversation["thread_id"] == st.session_state.thread_id
             title = conversation["title"]
-            label = title[:26] + "..." if len(title) > 29 else title
+            label = title[:34] + "..." if len(title) > 37 else title
             if is_current:
-                label = f"{label} *"
-            row, delete = st.columns([0.68, 0.32], gap="small")
+                label = f"{label} (current)"
+            row, delete = st.columns([0.84, 0.16], gap="small")
             with row:
                 if st.button(
                     label,
@@ -227,30 +227,12 @@ with st.sidebar:
                     st.rerun()
             with delete:
                 if st.button(
-                    "Delete",
-                    use_container_width=True,
+                    "🗑",
                     key=f"delete-{conversation['thread_id']}",
                     help=f"Delete: {title}",
                 ):
                     _delete_saved_conversation(conversation["thread_id"])
                     st.rerun()
-
-        delete_options = {
-            f"{row['title'][:44]} ({row['updated_at'][:10]})": row["thread_id"]
-            for row in conversations
-        }
-        selected_delete_label = st.selectbox(
-            "Delete saved chat",
-            ["Select a chat..."] + list(delete_options.keys()),
-            key="delete_chat_select",
-        )
-        if selected_delete_label != "Select a chat..." and st.button(
-            "Delete Selected Chat",
-            use_container_width=True,
-            key="delete_selected_chat",
-        ):
-            _delete_saved_conversation(delete_options[selected_delete_label])
-            st.rerun()
 
         st.download_button(
             "Export Current Chat",

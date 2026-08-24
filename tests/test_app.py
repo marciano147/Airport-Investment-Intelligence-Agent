@@ -43,7 +43,7 @@ def test_chat_history_has_delete_control():
     source = APP_PATH.read_text(encoding="utf-8")
 
     assert "delete_conversation" in source
-    assert "st.columns([0.68, 0.32]" in source
-    assert '"Delete"' in source
-    assert '"Delete saved chat"' in source
-    assert '"Delete Selected Chat"' in source
+    assert "st.columns([0.84, 0.16]" in source
+    assert '"🗑"' in source
+    assert '"Delete saved chat"' not in source
+    assert '"Delete Selected Chat"' not in source
