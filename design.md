@@ -62,6 +62,7 @@ This keeps agent behavior editable without changing code.
 - Tools return structured errors with suggestions.
 - Streamlit exposes a raw-response debug panel.
 - LangGraph uses an in-memory checkpointer keyed by the Streamlit session thread for follow-up questions.
+- `agent.run_agent(user_message, thread_id)` provides a small memory-backed invocation interface for scripts and tests.
 - LangSmith tracing can be enabled with environment variables.
 
 ## Trade-Offs

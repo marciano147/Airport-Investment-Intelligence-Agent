@@ -1,4 +1,5 @@
 import agent
+from langchain_core.messages import AIMessage
 
 
 def test_agent_tools_include_comparison_and_long_haul():
@@ -11,3 +12,9 @@ def test_agent_tools_include_comparison_and_long_haul():
 
 def test_agent_uses_memory_checkpointer():
     assert agent.CHECKPOINTER is not None
+
+
+def test_response_content_extracts_last_message():
+    response = {"messages": [AIMessage(content="first"), AIMessage(content="final")]}
+
+    assert agent.response_content(response) == "final"

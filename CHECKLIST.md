@@ -14,7 +14,9 @@
 - [x] Add direct airport comparison tool.
 - [x] Add approximate long-haul share proxy tool.
 - [x] Wire LangGraph in-memory checkpointer for follow-up questions.
+- [x] Add reusable `run_agent` helper for memory-backed invocation.
 - [x] Add Streamlit chat UI with debug sidebar.
+- [x] Add Streamlit new-conversation control and broader example questions.
 - [x] Add README and design document.
 - [x] Add tests for scoring and data assembly.
 

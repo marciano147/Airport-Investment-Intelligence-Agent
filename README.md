@@ -17,6 +17,7 @@ The app uses deterministic scoring for ranking and an LLM only for conversation,
 - Live FAA NAS delay status where available
 - LangSmith tracing hooks
 - In-memory LangGraph checkpointer for follow-up questions
+- New-conversation control and debug panel in Streamlit
 - Unit tests for scoring and data assembly
 
 ## Quick Start

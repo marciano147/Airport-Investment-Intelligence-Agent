@@ -8,13 +8,18 @@ from typing import Any
 
 import streamlit as st
 
-from agent import get_agent
+from agent import get_agent, response_content
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 
-st.set_page_config(page_title="Airport Investment Intelligence Agent", page_icon="✈️")
+st.set_page_config(
+    page_title="Airport Investment Intelligence Agent",
+    page_icon="✈️",
+    layout="wide",
+)
 st.title("Airport Investment Intelligence Agent")
+st.caption("Identify promising US airports for terminal and capacity modernization")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -24,21 +29,34 @@ if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
 
 with st.sidebar:
+    st.header("Controls")
+    if st.button("New Conversation", use_container_width=True):
+        st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
+        st.session_state.messages = []
+        st.session_state.last_response = None
+        st.rerun()
+
+    st.divider()
     st.subheader("Example Questions")
     examples = [
+        "Which airports in New England are strong candidates for terminal expansion?",
         "Rank the top 5 US airports for terminal expansion.",
         "Rank California airports for capacity investment potential.",
         "Compare LAX and SNA congestion levels.",
-        "Estimate long-haul share at ANC.",
-        "What assumptions should I know before using this ranking?",
+        "What is the percentage of long-haul flights out of Anchorage airport?",
+        "What is the unmet flight demand in SFO airport and why?",
+        "Compare SFO and LAX on growth and congestion.",
     ]
     for example in examples:
         if st.button(example, use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": example})
+            st.rerun()
 
+    st.divider()
     st.subheader("Debug / Monitoring")
-    show_raw = st.checkbox("Show raw agent response")
+    show_raw = st.checkbox("Show debug info")
     show_trace = st.checkbox("Show LangSmith setup")
+    st.caption("Enable LangSmith for full traces.")
     if show_trace:
         st.code(
             "export LANGSMITH_TRACING=true\n"
@@ -47,6 +65,7 @@ with st.sidebar:
             language="bash",
         )
     if show_raw and st.session_state.last_response:
+        st.caption(f"Thread: {st.session_state.thread_id}")
         st.json(st.session_state.last_response)
 
 
@@ -55,11 +74,7 @@ for message in st.session_state.messages:
 
 
 def _content_from_response(response: dict[str, Any]) -> str:
-    messages = response.get("messages", [])
-    if not messages:
-        return "No response returned."
-    last = messages[-1]
-    return getattr(last, "content", str(last))
+    return response_content(response)
 
 
 if prompt := st.chat_input("Ask about airports..."):
@@ -71,7 +86,8 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
         with st.spinner("Analyzing airport data..."):
             try:
                 latest_user_message = st.session_state.messages[-1]
-                response = get_agent().invoke(
+                agent = get_agent()
+                response = agent.invoke(
                     {"messages": [latest_user_message]},
                     config={"configurable": {"thread_id": st.session_state.thread_id}},
                 )
@@ -84,8 +100,8 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                 content = _content_from_response(response)
             except Exception as exc:
                 logging.exception("Agent invocation failed")
-                content = f"Agent failed: {exc}. Check API keys, cached data, and logs."
+                content = f"Error: {exc}"
                 st.session_state.last_response = {"error": str(exc)}
 
-        st.write(content)
+        st.markdown(content)
         st.session_state.messages.append({"role": "assistant", "content": content})
