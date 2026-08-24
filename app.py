@@ -82,6 +82,7 @@ with st.sidebar:
     if show_trace:
         st.code(
             "export LANGSMITH_TRACING=true\n"
+            "export LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com\n"
             "export LANGSMITH_API_KEY=\n"
             "export LANGSMITH_PROJECT=airport-agent",
             language="bash",

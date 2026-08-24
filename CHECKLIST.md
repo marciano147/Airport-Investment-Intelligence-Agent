@@ -19,6 +19,7 @@
 - [x] Add Streamlit new-conversation control and broader example questions.
 - [x] Switch chat LLM provider to Groq.
 - [x] Add Streamlit voice input with Groq Whisper transcription.
+- [x] Document LangSmith EU endpoint for tracing.
 - [x] Add README and design document.
 - [x] Add tests for scoring and data assembly.
 

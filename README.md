@@ -49,6 +49,7 @@ Optional LangSmith tracing:
 
 ```bash
 LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
 LANGSMITH_API_KEY=your-langsmith-key
 LANGSMITH_PROJECT=airport-agent
 ```
