@@ -2,77 +2,107 @@
 
 ## Goal
 
-Build a one-day AI agent that helps an airport modernization investor identify promising US airports for terminal or capacity expansion.
+Build a one-day AI agent that helps airport modernization investors identify US airports with strong terminal or capacity expansion potential.
 
-The agent must rank airports with deterministic logic, explain the reasoning, show assumptions, and support conversational follow-ups.
+The agent must answer ranking, comparison, congestion, growth, long-haul, and unmet-demand questions. The original sample questions are examples only, not fixed scope.
 
 ## Architecture
 
-- `app.py`: Streamlit chat UI and debug sidebar.
-- `agent.py`: LangGraph ReAct agent using OpenAI chat models.
-- `tools.py`: LangChain tools for airport info, congestion, passenger metrics, and ranking.
-- `long_haul.py`: static, documented proxy for long-haul and international share questions.
-- `scoring.py`: deterministic scoring formula.
-- `data_loader.py`: cached public data loading, region mapping, and ranking candidate assembly.
-- `context/*.md`: Hermes-style behavioral context.
+```text
+User question
+  -> Streamlit chat UI
+  -> LangGraph ReAct agent
+  -> Tool calls for data and scoring
+  -> Deterministic Python result
+  -> LLM explanation with assumptions
+```
 
-The LLM does not decide rankings. It calls tools, then explains deterministic outputs.
+Main files:
 
-The example questions are illustrations, not fixed scope. The same tools support region rankings, direct airport comparisons, single-airport checks, long-haul proxy questions, and follow-ups.
+- `app.py`: Streamlit chat UI, example prompts, new-conversation control, and debug panel.
+- `agent.py`: LangGraph ReAct agent, OpenAI model setup, tool registry, and `MemorySaver` checkpointing.
+- `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, and long-haul estimates.
+- `data_loader.py`: public data caches, region/state handling, runway counts, and expansion candidate assembly.
+- `scoring.py`: deterministic score calculation and ranking.
+- `long_haul.py`: static long-haul and international share proxy table.
+- `context/*.md`: Hermes-style prompt context for role, tools, scoring, assumptions, and answer style.
+
+The LLM does not calculate rankings. It chooses tools and explains their outputs.
 
 ## Scoring Methodology
 
-Required formula:
+The composite score is fixed:
 
 ```text
-Composite = (Congestion * 0.35) + (Growth * 0.30) + (Utilization * 0.25) + (Secondary * 0.10)
+Composite =
+  (Congestion Score * 0.35) +
+  (Passenger Growth Score * 0.30) +
+  (Utilization Score * 0.25) +
+  (Secondary Score * 0.10)
 ```
 
-Each component is normalized to 0-100.
+All component scores are normalized to 0-100 before weighting.
 
-- Congestion: live FAA delay/advisory proxy where available, normalized from 0 to 60 minutes.
-- Growth: year-over-year passenger growth, normalized from -5% to +20%.
-- Utilization: 2024 enplanements per runway relative to the selected region.
-- Secondary: inverse size proxy for non-dominant market opportunity.
+- Congestion Score: FAA delay minutes normalized from 0 to 60 minutes.
+- Passenger Growth Score: year-over-year enplanement growth normalized from -5% to +20%.
+- Utilization Score: passengers per runway, scaled relative to the selected candidate set and then scored through the shared 40-95 utilization range.
+- Secondary Score: strategic proxy based on airport scale and route-mix context. Defaults are explicit when richer data is unavailable.
 
-## Data Sources & Limitations
+The formula lives in `scoring.py`. Ranking order comes from pure Python, not from model preference.
 
-- OurAirports provides airport metadata and IATA/state coverage.
-- FAA passenger boarding data is the target source for passenger metrics, but it has reporting lag.
-- FAA NAS status is live, but active advisories are sparse and not a complete congestion model.
-- The included enplanement CSV is a cache from the FAA 2024 commercial-service workbook and should be refreshed before production use.
-- Region support covers major US airports by default, named prototype regions, and state-code filters.
-- Long-haul share is a static proxy table in v1. Replace it with route-level BTS T-100 or commercial schedule data for production.
+## Data Sources
 
-## Hermes-Style Context System
+| Source | Used For | Current Handling |
+| --- | --- | --- |
+| OurAirports | Airport metadata, IATA coverage, runway data | Cached CSVs in `data/` |
+| FAA passenger boarding data | Enplanements and YoY growth | Cached 2024 commercial-service CSV |
+| FAA NAS airport status | Current delay and advisory signal | Live request with safe fallback |
+| Static proxy table | Long-haul and international share | Approximate, labeled in tool output |
 
-`prompts.py` loads:
+## Where AI Is Used
 
-- `SOUL.md`
-- `TOOLS.md`
-- `SCORING.md`
-- `ASSUMPTIONS.md`
-- `WRITING.md`
+The LLM is used for:
 
-This keeps agent behavior editable without changing code.
+- Interpreting analyst questions.
+- Choosing which tools to call.
+- Combining tool results into a clear answer.
+- Handling follow-up questions with conversation history.
+- Stating assumptions and uncertainty.
 
-## Monitoring & Debugging
+Deterministic code is used for:
 
-- Python logging wraps tool failures.
-- Tools return structured errors with suggestions.
-- Streamlit exposes a raw-response debug panel.
-- LangGraph uses an in-memory checkpointer keyed by the Streamlit session thread for follow-up questions.
-- `agent.run_agent(user_message, thread_id)` provides a small memory-backed invocation interface for scripts and tests.
-- LangSmith tracing can be enabled with environment variables.
+- Numerical scoring.
+- Airport ranking order.
+- Side-by-side comparison tables.
+- Data loading and cache assembly.
+
+## Monitoring and Debugging
+
+- Tool failures are logged with Python logging.
+- Tools return structured error payloads or fallback notes instead of failing silently.
+- Streamlit can show raw agent responses in the debug panel.
+- LangGraph memory uses a thread ID per Streamlit conversation.
+- LangSmith tracing can be enabled through `.env` to inspect LLM steps and tool calls.
 
 ## Trade-Offs
 
-- The one-day build favors reliable cached data over fragile live workbook parsing.
-- The score is intentionally transparent and deterministic.
-- The model is useful for conversation and explanation, not numeric authority.
+- Cached FAA enplanement data keeps the demo stable, but it needs refresh work for future years.
+- FAA NAS status is a current advisory signal, not a full historical congestion model.
+- Long-haul share uses a transparent proxy because free route-level schedule data is limited.
+- Utilization is based on passengers per runway. A production model should include declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
+- The score is simple by design so reviewers can reproduce and challenge it.
 
-## Assumptions & Uncertainty
+## Assumptions and Limitations
 
-- Long-haul share is not modeled in v1.
-- Unmet demand is a proxy.
-- This is not a full financial model.
+- Passenger data has reporting lag.
+- "Unmet demand" means a proxy based on congestion, growth, and utilization, not true origin-destination booking demand.
+- Scope is limited to US airports with IATA codes and public data coverage.
+- This is analyst decision support, not a construction-cost model, traffic forecast, or investment committee memo.
+
+## Future Improvements
+
+- Replace long-haul proxy values with BTS T-100 route-level data or a schedule feed.
+- Add state and metro-area airport discovery beyond the current curated region map.
+- Add a repeatable data refresh script for FAA enplanements.
+- Add an evaluation set for example questions and expected tool calls.
+- Persist conversation state outside process memory for deployed use.
