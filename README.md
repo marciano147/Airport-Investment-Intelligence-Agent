@@ -12,8 +12,11 @@ The app uses deterministic scoring for ranking and an LLM only for conversation,
 - Deterministic scoring breakdown
 - Cached public airport data
 - Runway-aware utilization proxy
+- Direct airport comparison tool
+- Approximate long-haul / international share proxy
 - Live FAA NAS delay status where available
 - LangSmith tracing hooks
+- In-memory LangGraph checkpointer for follow-up questions
 - Unit tests for scoring and data assembly
 
 ## Quick Start
@@ -61,5 +64,6 @@ The checked-in CSVs make the one-day demo reliable. Refresh logic is included fo
 - Rank California airports for capacity investment potential.
 - Which airports in New England are strong candidates?
 - Compare LAX and SNA congestion levels.
+- Estimate long-haul share at ANC.
 - Why did the top airport score higher than the others?
 - What assumptions should I know before using this ranking?

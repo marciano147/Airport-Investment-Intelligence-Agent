@@ -6,12 +6,15 @@ import os
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
 from prompts import load_context
 from tools import (
+    compare_airports,
     get_airport_info,
     get_congestion,
+    get_long_haul_estimate,
     get_passenger_metrics,
     rank_airports_for_expansion,
 )
@@ -20,6 +23,15 @@ from tools import (
 load_dotenv()
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+CHECKPOINTER = MemorySaver()
+AGENT_TOOLS = [
+    get_airport_info,
+    get_congestion,
+    get_passenger_metrics,
+    rank_airports_for_expansion,
+    compare_airports,
+    get_long_haul_estimate,
+]
 
 
 def build_agent():
@@ -28,13 +40,9 @@ def build_agent():
     system_prompt = load_context()
     return create_react_agent(
         llm,
-        tools=[
-            get_airport_info,
-            get_congestion,
-            get_passenger_metrics,
-            rank_airports_for_expansion,
-        ],
+        tools=AGENT_TOOLS,
         prompt=system_prompt,
+        checkpointer=CHECKPOINTER,
     )
 
 

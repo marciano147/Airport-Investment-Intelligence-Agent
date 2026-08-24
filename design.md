@@ -11,11 +11,14 @@ The agent must rank airports with deterministic logic, explain the reasoning, sh
 - `app.py`: Streamlit chat UI and debug sidebar.
 - `agent.py`: LangGraph ReAct agent using OpenAI chat models.
 - `tools.py`: LangChain tools for airport info, congestion, passenger metrics, and ranking.
+- `long_haul.py`: static, documented proxy for long-haul and international share questions.
 - `scoring.py`: deterministic scoring formula.
 - `data_loader.py`: cached public data loading, region mapping, and ranking candidate assembly.
 - `context/*.md`: Hermes-style behavioral context.
 
 The LLM does not decide rankings. It calls tools, then explains deterministic outputs.
+
+The example questions are illustrations, not fixed scope. The same tools support region rankings, direct airport comparisons, single-airport checks, long-haul proxy questions, and follow-ups.
 
 ## Scoring Methodology
 
@@ -39,6 +42,7 @@ Each component is normalized to 0-100.
 - FAA NAS status is live, but active advisories are sparse and not a complete congestion model.
 - The included enplanement CSV is a cache from the FAA 2024 commercial-service workbook and should be refreshed before production use.
 - Region support covers major US airports by default, named prototype regions, and state-code filters.
+- Long-haul share is a static proxy table in v1. Replace it with route-level BTS T-100 or commercial schedule data for production.
 
 ## Hermes-Style Context System
 
@@ -57,6 +61,7 @@ This keeps agent behavior editable without changing code.
 - Python logging wraps tool failures.
 - Tools return structured errors with suggestions.
 - Streamlit exposes a raw-response debug panel.
+- LangGraph uses an in-memory checkpointer keyed by the Streamlit session thread for follow-up questions.
 - LangSmith tracing can be enabled with environment variables.
 
 ## Trade-Offs

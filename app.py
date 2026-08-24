@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import Any
 
 import streamlit as st
@@ -19,6 +20,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_response" not in st.session_state:
     st.session_state.last_response = None
+if "thread_id" not in st.session_state:
+    st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
 
 with st.sidebar:
     st.subheader("Example Questions")
@@ -26,6 +29,7 @@ with st.sidebar:
         "Rank the top 5 US airports for terminal expansion.",
         "Rank California airports for capacity investment potential.",
         "Compare LAX and SNA congestion levels.",
+        "Estimate long-haul share at ANC.",
         "What assumptions should I know before using this ranking?",
     ]
     for example in examples:
@@ -66,9 +70,16 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
     with st.chat_message("assistant"):
         with st.spinner("Analyzing airport data..."):
             try:
-                response = get_agent().invoke({"messages": st.session_state.messages})
+                latest_user_message = st.session_state.messages[-1]
+                response = get_agent().invoke(
+                    {"messages": [latest_user_message]},
+                    config={"configurable": {"thread_id": st.session_state.thread_id}},
+                )
                 st.session_state.last_response = {
-                    "messages": [getattr(msg, "content", str(msg)) for msg in response.get("messages", [])]
+                    "messages": [
+                        getattr(msg, "content", str(msg))
+                        for msg in response.get("messages", [])
+                    ]
                 }
                 content = _content_from_response(response)
             except Exception as exc:
