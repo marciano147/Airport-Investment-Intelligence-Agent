@@ -84,6 +84,15 @@ def load_messages(
     return [dict(row) for row in rows]
 
 
+def delete_conversation(thread_id: str, db_path: str | Path | None = None) -> None:
+    """Delete one saved conversation and all of its messages."""
+    path = _resolve_db_path(db_path)
+    init_store(path)
+    with sqlite3.connect(path) as conn:
+        conn.execute("DELETE FROM messages WHERE thread_id = ?", (thread_id,))
+        conn.execute("DELETE FROM conversations WHERE thread_id = ?", (thread_id,))
+
+
 def save_message(
     thread_id: str,
     role: str,

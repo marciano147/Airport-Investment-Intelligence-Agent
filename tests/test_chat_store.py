@@ -2,7 +2,13 @@ import json
 
 import chat_store
 
-from chat_store import export_messages_json, list_conversations, load_messages, save_message
+from chat_store import (
+    delete_conversation,
+    export_messages_json,
+    list_conversations,
+    load_messages,
+    save_message,
+)
 
 
 def test_chat_store_saves_and_loads_messages(tmp_path):
@@ -30,6 +36,22 @@ def test_chat_store_exports_messages_as_json(tmp_path):
     exported = json.loads(export_messages_json("thread-2", db_path))
 
     assert exported == [{"role": "user", "content": "Compare LAX and SNA"}]
+
+
+def test_chat_store_deletes_one_conversation(tmp_path):
+    db_path = tmp_path / "chat_history.db"
+
+    save_message("thread-1", "user", "Rank California airports", db_path)
+    save_message("thread-2", "user", "Compare LAX and SNA", db_path)
+
+    delete_conversation("thread-1", db_path)
+
+    conversations = list_conversations(db_path)
+    assert [row["thread_id"] for row in conversations] == ["thread-2"]
+    assert load_messages("thread-1", db_path) == []
+    assert load_messages("thread-2", db_path) == [
+        {"role": "user", "content": "Compare LAX and SNA"}
+    ]
 
 
 def test_chat_store_uses_current_default_path(monkeypatch, tmp_path):

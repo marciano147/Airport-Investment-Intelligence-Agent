@@ -28,10 +28,22 @@ def test_voice_transcript_path_does_not_force_immediate_rerun():
     assert risky_pattern not in source
 
 
-def test_voice_input_uses_explicit_submit_form():
+def test_voice_input_uses_stable_audio_widget_and_button():
     source = APP_PATH.read_text(encoding="utf-8")
 
-    assert 'st.form("voice_input_form", clear_on_submit=True)' in source
-    assert 'st.form_submit_button("Send Voice"' in source
+    assert 'st.form("voice_input_form", clear_on_submit=True)' not in source
+    assert "st.audio_input(" in source
+    assert 'st.button("Send Voice"' in source
     assert "voice_slot.empty()" not in source
+    assert "_record_voice_event" in source
     assert "voice_reset_after_response" in source
+
+
+def test_chat_history_has_delete_control():
+    source = APP_PATH.read_text(encoding="utf-8")
+
+    assert "delete_conversation" in source
+    assert "st.columns([0.68, 0.32]" in source
+    assert '"Delete"' in source
+    assert '"Delete saved chat"' in source
+    assert '"Delete Selected Chat"' in source

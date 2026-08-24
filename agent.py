@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import os
+import time
+from collections.abc import Sequence
+from typing import Any
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
@@ -72,11 +75,32 @@ def response_content(response: dict) -> str:
     return getattr(messages[-1], "content", str(messages[-1]))
 
 
+def invoke_agent_messages(
+    messages: Sequence[Any],
+    thread_id: str = "default",
+    attempts: int = 3,
+) -> dict:
+    """Invoke the agent with short retries for transient provider throttles."""
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return get_agent().invoke(
+                {"messages": list(messages)},
+                config={"configurable": {"thread_id": thread_id}},
+            )
+        except Exception as exc:
+            last_error = exc
+            if "rate limit" not in str(exc).lower() or attempt == attempts - 1:
+                raise
+            time.sleep(2 * (attempt + 1))
+    raise RuntimeError(f"Agent query failed after retries: {last_error}")
+
+
 def run_agent(user_message: str, thread_id: str = "default") -> str:
     """Invoke the agent with conversation memory and return the final text."""
-    response = get_agent().invoke(
-        {"messages": [("user", user_message)]},
-        config={"configurable": {"thread_id": thread_id}},
+    response = invoke_agent_messages(
+        [("user", user_message)],
+        thread_id=thread_id,
     )
     return response_content(response)
 

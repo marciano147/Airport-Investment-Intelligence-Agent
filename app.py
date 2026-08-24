@@ -5,12 +5,16 @@ from __future__ import annotations
 import hashlib
 import logging
 import uuid
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from time import strftime
 from typing import Any
 
 import streamlit as st
 
-from agent import get_agent, response_content
+from agent import invoke_agent_messages, response_content
 from chat_store import (
+    delete_conversation,
     export_messages_json,
     init_store,
     list_conversations,
@@ -20,7 +24,23 @@ from chat_store import (
 from voice_utils import transcribe_audio, transcription_succeeded
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)
+logger = logging.getLogger("airport_agent.app")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+    file_handler = RotatingFileHandler(
+        LOG_DIR / "app.log",
+        maxBytes=500_000,
+        backupCount=3,
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    logger.propagate = False
 
 st.set_page_config(
     page_title="Airport Investment Intelligence Agent",
@@ -53,6 +73,8 @@ if "voice_status" not in st.session_state:
     st.session_state.voice_status = None
 if "voice_reset_after_response" not in st.session_state:
     st.session_state.voice_reset_after_response = False
+if "voice_debug_events" not in st.session_state:
+    st.session_state.voice_debug_events = []
 
 
 def _start_new_conversation() -> None:
@@ -92,6 +114,28 @@ def _load_conversation(thread_id: str) -> None:
     st.session_state.voice_reset_after_response = False
 
 
+def _delete_saved_conversation(thread_id: str) -> None:
+    """Remove a saved conversation and clear it from the active UI if selected."""
+    delete_conversation(thread_id)
+    logger.info("deleted_conversation thread_id=%s", thread_id)
+    if thread_id == st.session_state.thread_id:
+        _start_new_conversation()
+
+
+def _record_voice_event(event: str, **fields: Any) -> None:
+    """Log voice stages without storing audio bytes or full transcripts."""
+    entry = {
+        "time": strftime("%H:%M:%S"),
+        "event": event,
+        **fields,
+    }
+    st.session_state.voice_debug_events = (
+        st.session_state.voice_debug_events + [entry]
+    )[-20:]
+    details = " ".join(f"{key}={value}" for key, value in fields.items())
+    logger.info("voice_event=%s %s", event, details)
+
+
 def _render_voice_input() -> None:
     """Render sidebar voice recording and submit transcript as normal chat text."""
     st.subheader("Voice Input")
@@ -103,12 +147,14 @@ def _render_voice_input() -> None:
         else:
             voice_status_slot.error(status_message)
 
-    with st.form("voice_input_form", clear_on_submit=True):
-        audio_data = st.audio_input(
-            "Record a voice question",
-            key=f"voice_input_{st.session_state.voice_input_version}",
-        )
-        send_voice = st.form_submit_button("Send Voice", use_container_width=True)
+    # Keep the recorder outside `st.form`. The audio widget has its own stop and
+    # upload lifecycle, and batching it inside a form can leave the frontend in a
+    # transient error state after recording stops.
+    audio_data = st.audio_input(
+        "Record a voice question",
+        key=f"voice_input_{st.session_state.voice_input_version}",
+    )
+    send_voice = st.button("Send Voice", use_container_width=True, key="send_voice")
 
     if not send_voice:
         return
@@ -116,15 +162,18 @@ def _render_voice_input() -> None:
     if audio_data is None:
         message = "Record a voice question before sending."
         st.session_state.voice_status = ("error", message)
+        _record_voice_event("submit_without_audio")
         voice_status_slot.error(message)
         return
 
     audio_bytes = audio_data.getvalue()
     audio_hash = hashlib.sha256(audio_bytes).hexdigest()
     if audio_hash == st.session_state.last_audio_hash:
+        _record_voice_event("duplicate_audio_ignored", hash=audio_hash[:12])
         return
 
     st.session_state.last_audio_hash = audio_hash
+    _record_voice_event("transcription_started", bytes=len(audio_bytes), hash=audio_hash[:12])
     with st.spinner("Transcribing with Groq Whisper..."):
         transcript = transcribe_audio(audio_bytes)
 
@@ -134,12 +183,14 @@ def _render_voice_input() -> None:
         st.session_state.voice_input_version += 1
         st.session_state.voice_status = ("success", f'Heard: "{transcript}"')
         st.session_state.voice_reset_after_response = True
+        _record_voice_event("transcription_succeeded", transcript_chars=len(transcript))
         voice_status_slot.success(st.session_state.voice_status[1])
         _queue_user_message(transcript)
         return
 
     message = transcript or "Transcription failed. Try recording again."
     st.session_state.voice_status = ("error", message)
+    _record_voice_event("transcription_failed", error=message[:160])
     voice_status_slot.error(message)
 
 
@@ -160,16 +211,46 @@ with st.sidebar:
         st.subheader("Chat History")
         for conversation in conversations:
             is_current = conversation["thread_id"] == st.session_state.thread_id
-            label = conversation["title"]
+            title = conversation["title"]
+            label = title[:26] + "..." if len(title) > 29 else title
             if is_current:
-                label = f"{label} (current)"
-            if st.button(
-                label,
-                use_container_width=True,
-                key=f"history-{conversation['thread_id']}",
-            ):
-                _load_conversation(conversation["thread_id"])
-                st.rerun()
+                label = f"{label} *"
+            row, delete = st.columns([0.68, 0.32], gap="small")
+            with row:
+                if st.button(
+                    label,
+                    use_container_width=True,
+                    key=f"history-{conversation['thread_id']}",
+                    help=title,
+                ):
+                    _load_conversation(conversation["thread_id"])
+                    st.rerun()
+            with delete:
+                if st.button(
+                    "Delete",
+                    use_container_width=True,
+                    key=f"delete-{conversation['thread_id']}",
+                    help=f"Delete: {title}",
+                ):
+                    _delete_saved_conversation(conversation["thread_id"])
+                    st.rerun()
+
+        delete_options = {
+            f"{row['title'][:44]} ({row['updated_at'][:10]})": row["thread_id"]
+            for row in conversations
+        }
+        selected_delete_label = st.selectbox(
+            "Delete saved chat",
+            ["Select a chat..."] + list(delete_options.keys()),
+            key="delete_chat_select",
+        )
+        if selected_delete_label != "Select a chat..." and st.button(
+            "Delete Selected Chat",
+            use_container_width=True,
+            key="delete_selected_chat",
+        ):
+            _delete_saved_conversation(delete_options[selected_delete_label])
+            st.rerun()
 
         st.download_button(
             "Export Current Chat",
@@ -211,6 +292,9 @@ with st.sidebar:
     if show_raw and st.session_state.last_response:
         st.caption(f"Thread: {st.session_state.thread_id}")
         st.json(st.session_state.last_response)
+    if show_raw and st.session_state.voice_debug_events:
+        st.caption("Recent voice events")
+        st.json(st.session_state.voice_debug_events)
 
 
 for message in st.session_state.messages:
@@ -248,10 +332,9 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                     st.session_state.replay_next = False
                 else:
                     input_messages = [latest_user_message]
-                agent = get_agent()
-                response = agent.invoke(
-                    {"messages": input_messages},
-                    config={"configurable": {"thread_id": st.session_state.thread_id}},
+                response = invoke_agent_messages(
+                    input_messages,
+                    thread_id=st.session_state.thread_id,
                 )
                 st.session_state.last_response = {
                     "messages": [
@@ -264,7 +347,7 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                     with st.expander("Raw agent result"):
                         st.json(st.session_state.last_response)
             except Exception as exc:
-                logging.exception("Agent invocation failed")
+                logger.exception("Agent invocation failed")
                 content = f"Error: {exc}"
                 st.session_state.last_response = {"error": str(exc)}
 

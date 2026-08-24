@@ -8,3 +8,4 @@ __pycache__/
 *.pyd
 data/raw/
 data/chat_history.db
+logs/

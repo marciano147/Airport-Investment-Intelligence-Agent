@@ -30,6 +30,9 @@
 - [x] Add persistent SQLite chat history and move voice input into the sidebar controls.
 - [x] Recalibrate scoring with congestion baselines, capped runway utilization, and strategic secondary proxies.
 - [x] Add Makefile command shortcuts and data cache documentation.
+- [x] Audit recent LangSmith traces and add shared retry handling for transient Groq rate limits.
+- [x] Move voice recorder out of Streamlit form lifecycle and add voice event logs.
+- [x] Add per-conversation delete controls in chat history.
 
 ## Verification
 
