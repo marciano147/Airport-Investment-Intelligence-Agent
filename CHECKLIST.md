@@ -29,6 +29,7 @@
 - [x] Add compute-layer caches and tool timing logs.
 - [x] Add persistent SQLite chat history and move voice input into the sidebar controls.
 - [x] Recalibrate scoring with congestion baselines, capped runway utilization, and strategic secondary proxies.
+- [x] Add Makefile command shortcuts and data cache documentation.
 
 ## Verification
 

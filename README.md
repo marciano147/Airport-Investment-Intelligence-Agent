@@ -61,6 +61,12 @@ cp .env.example .env
 
 The venv must stay activated for `streamlit`, `pytest`, and `pip`. If you open a new terminal, activate it again.
 
+Shortcut for macOS / Linux:
+
+```bash
+make setup
+```
+
 Edit `.env`:
 
 ```bash
@@ -90,7 +96,7 @@ The repo includes demo-ready CSV caches:
 - `data/runways.csv`: runway counts and longest-runway fields derived from OurAirports.
 - `data/enplanements.csv`: FAA 2024 commercial-service passenger boarding cache.
 
-Airport and runway caches can refresh automatically if missing. The enplanement cache is checked in for review stability and should be refreshed manually when FAA workbook formats or reporting years change.
+Airport and runway caches can refresh automatically if missing. The enplanement cache is checked in for review stability and should be refreshed manually when FAA workbook formats or reporting years change. See `data/README.md` for the cache inventory.
 
 ## Run
 
@@ -98,6 +104,12 @@ With the venv activated:
 
 ```bash
 streamlit run app.py
+```
+
+macOS / Linux shortcut:
+
+```bash
+make run
 ```
 
 If `streamlit` is not on your PATH, call it from the venv:
@@ -131,10 +143,22 @@ Offline tests do not call Groq, LangSmith, FAA, or Streamlit over the network:
 pytest tests/ -v
 ```
 
+macOS / Linux shortcut:
+
+```bash
+make check
+```
+
 Opt-in live smoke checks use `.env` and real services:
 
 ```bash
 python scripts/live_smoke.py
+```
+
+macOS / Linux shortcut:
+
+```bash
+make smoke
 ```
 
 The live smoke script checks Groq model access, one agent query, LangSmith access, Groq Whisper transcription, and Streamlit health.
@@ -143,6 +167,12 @@ For a broader live e2e and edge-case audit:
 
 ```bash
 python scripts/e2e_edge_cases.py
+```
+
+macOS / Linux shortcut:
+
+```bash
+make e2e
 ```
 
 This checks tool rankings, comparisons, long-haul estimates, invalid inputs, empty regions, several live agent questions, same-thread follow-up memory, voice transcription, and Streamlit boot.
@@ -170,8 +200,10 @@ long_haul.py    Long-haul proxy estimates
 voice_utils.py  Groq Whisper transcription helper
 prompts.py      Hermes-style context loader
 context/        SOUL, TOOLS, SCORING, ASSUMPTIONS, and WRITING prompts
+data/           Review-stable CSV caches and local ignored chat history
 tests/          Unit tests
 scripts/        Opt-in live smoke checks
+Makefile        Local setup, run, test, smoke, e2e, and cleanup commands
 design.md       Architecture and scoring notes
 ```
 
