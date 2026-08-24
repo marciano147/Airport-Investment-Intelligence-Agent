@@ -32,7 +32,11 @@ logger = logging.getLogger(__name__)
 
 def _status_delay_scores() -> dict[str, dict[str, Any]]:
     """Return FAA NAS active programs as delay-minute signals."""
-    return fetch_nas_status_delays()
+    try:
+        return fetch_nas_status_delays()
+    except Exception:
+        logger.exception("FAA NAS Status feed unavailable; using baseline congestion")
+        return {}
 
 
 def _airport_score_input(

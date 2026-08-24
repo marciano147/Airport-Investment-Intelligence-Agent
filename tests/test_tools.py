@@ -89,6 +89,19 @@ def test_rank_tool_accepts_us_default_without_live_faa(monkeypatch):
     assert "Assumptions & Limitations" in result
 
 
+def test_rank_tool_falls_back_to_baselines_when_nas_feed_fails(monkeypatch):
+    monkeypatch.setattr(
+        "tools.fetch_nas_status_delays",
+        lambda: (_ for _ in ()).throw(RuntimeError("nas unavailable")),
+    )
+
+    result = rank_airports_for_expansion.invoke({"region": "US", "top_n": 3})
+
+    assert "Ranking for region: US" in result
+    assert "Composite" in result
+    assert "deterministic hub baselines" in result
+
+
 def test_rank_tool_returns_message_for_empty_candidate_set(monkeypatch):
     monkeypatch.setattr("tools._status_delay_scores", lambda: {})
     monkeypatch.setattr("tools.expansion_candidates", lambda region: [])

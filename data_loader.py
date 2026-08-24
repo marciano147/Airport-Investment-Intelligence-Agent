@@ -449,6 +449,10 @@ def cache_stats() -> dict[str, Any]:
         "metrics_by_iata": _metrics_by_iata_cached.cache_info()._asdict(),
         "get_airports_for_region": _airports_for_region_cached.cache_info()._asdict(),
         "expansion_candidates": _expansion_candidates_cached.cache_info()._asdict(),
+        "nas_status_cache": {
+            "has_data": _NAS_STATUS_CACHE["data"] is not None,
+            "expires_at": _NAS_STATUS_CACHE["expires_at"],
+        },
     }
 
 
@@ -460,6 +464,8 @@ def clear_caches() -> None:
     _metrics_by_iata_cached.cache_clear()
     _airports_for_region_cached.cache_clear()
     _expansion_candidates_cached.cache_clear()
+    _NAS_STATUS_CACHE["data"] = None
+    _NAS_STATUS_CACHE["expires_at"] = 0.0
 
 
 def _enplanements_per_runway(candidate: dict[str, Any]) -> float:

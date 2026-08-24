@@ -132,6 +132,7 @@ def test_data_loader_cache_stats_track_repeated_lookup():
     assert first == second
     assert stats["airport_by_iata"]["hits"] >= 1
     assert stats["load_airports"]["hits"] >= 1
+    assert stats["nas_status_cache"]["has_data"] is False
 
 
 def test_parse_delay_minutes_handles_common_faa_text():
