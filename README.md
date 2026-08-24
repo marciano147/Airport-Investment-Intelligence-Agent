@@ -10,6 +10,7 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 - Compare any two airports on congestion, passenger growth, utilization, and composite score.
 - Estimate long-haul or international share with a labeled proxy table.
 - Answer follow-up questions through LangGraph conversation memory.
+- Record a voice question in Streamlit and transcribe it with Groq Whisper.
 - Show assumptions, data limits, and score breakdowns.
 - Inspect raw agent responses in the Streamlit debug panel.
 - Enable LangSmith tracing for tool and LLM review.
@@ -17,7 +18,8 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 ## Tech Stack
 
 - LangGraph and LangChain
-- OpenAI chat model through `langchain-openai`
+- Groq chat model through `langchain-groq`
+- Groq Whisper speech-to-text through the `groq` SDK
 - Streamlit chat UI
 - Public aviation data from OurAirports, FAA passenger boarding data, and FAA NAS status
 - Pytest for deterministic scoring and tool tests
@@ -34,11 +36,14 @@ cp .env.example .env
 Edit `.env`:
 
 ```bash
-OPENAI_API_KEY=sk-your-key-here
-OPENAI_MODEL=gpt-4o-mini
+GROQ_API_KEY=gsk-your-key-here
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 ```
 
-`OPENAI_API_KEY` is required to run the chat agent. `OPENAI_MODEL` is optional and defaults to `gpt-4o-mini`.
+`GROQ_API_KEY` is required for both chat and voice transcription. `GROQ_MODEL` and `GROQ_TRANSCRIPTION_MODEL` are optional defaults.
+
+Create a Groq key at `https://console.groq.com/keys`.
 
 Optional LangSmith tracing:
 
@@ -63,6 +68,8 @@ Airport and runway caches can refresh automatically if missing. The enplanement 
 ```bash
 streamlit run app.py
 ```
+
+The sidebar includes a microphone recorder. After recording, the app transcribes the audio and submits the transcript as a normal chat message.
 
 ## Test
 
@@ -89,6 +96,7 @@ tools.py        LangChain tools for rankings, comparisons, long-haul, and airpor
 data_loader.py  Cached public data loading and candidate assembly
 scoring.py      Deterministic scoring model
 long_haul.py    Long-haul proxy estimates
+voice_utils.py  Groq Whisper transcription helper
 prompts.py      Hermes-style context loader
 context/        SOUL, TOOLS, SCORING, ASSUMPTIONS, and WRITING prompts
 tests/          Unit tests

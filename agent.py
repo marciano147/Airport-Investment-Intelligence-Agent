@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -23,7 +23,7 @@ from tools import (
 
 load_dotenv()
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 CHECKPOINTER = MemorySaver()
 AGENT_TOOLS = [
     get_airport_info,
@@ -38,7 +38,7 @@ _AGENT: CompiledStateGraph | None = None
 
 def build_agent() -> CompiledStateGraph:
     """Create the LangGraph agent after credentials are available."""
-    llm = ChatOpenAI(model=MODEL, temperature=0)
+    llm = ChatGroq(model=MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
     system_prompt = load_context()
     return create_react_agent(
         llm,
@@ -51,8 +51,8 @@ def build_agent() -> CompiledStateGraph:
 def get_agent() -> CompiledStateGraph:
     """Return a configured agent or raise a clear credential error."""
     global _AGENT
-    if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENAI_ADMIN_KEY"):
-        raise RuntimeError("Set OPENAI_API_KEY in .env before running the chat agent.")
+    if not os.getenv("GROQ_API_KEY"):
+        raise RuntimeError("Set GROQ_API_KEY in .env before running the chat agent.")
     if _AGENT is None:
         _AGENT = build_agent()
     return _AGENT
@@ -75,4 +75,4 @@ def run_agent(user_message: str, thread_id: str = "default") -> str:
     return response_content(response)
 
 
-agent = get_agent() if os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_ADMIN_KEY") else None
+agent = get_agent() if os.getenv("GROQ_API_KEY") else None

@@ -20,11 +20,12 @@ User question
 Main files:
 
 - `app.py`: Streamlit chat UI, example prompts, new-conversation control, and debug panel.
-- `agent.py`: LangGraph ReAct agent, OpenAI model setup, tool registry, and `MemorySaver` checkpointing.
+- `agent.py`: LangGraph ReAct agent, Groq model setup, tool registry, and `MemorySaver` checkpointing.
 - `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, and long-haul estimates.
 - `data_loader.py`: public data caches, region/state handling, runway counts, and expansion candidate assembly.
 - `scoring.py`: deterministic score calculation and ranking.
 - `long_haul.py`: static long-haul and international share proxy table.
+- `voice_utils.py`: Groq Whisper transcription helper for recorded questions.
 - `context/*.md`: Hermes-style prompt context for role, tools, scoring, assumptions, and answer style.
 
 The LLM does not calculate rankings. It chooses tools and explains their outputs.
@@ -58,6 +59,7 @@ The formula lives in `scoring.py`. Ranking order comes from pure Python, not fro
 | FAA passenger boarding data | Enplanements and YoY growth | Cached 2024 commercial-service CSV |
 | FAA NAS airport status | Current delay and advisory signal | Live request with safe fallback |
 | Static proxy table | Long-haul and international share | Approximate, labeled in tool output |
+| Groq Whisper | Voice question transcription | Optional Streamlit microphone flow |
 
 ## Where AI Is Used
 
@@ -68,6 +70,7 @@ The LLM is used for:
 - Combining tool results into a clear answer.
 - Handling follow-up questions with conversation history.
 - Stating assumptions and uncertainty.
+- Transcribing recorded voice questions before normal agent handling.
 
 Deterministic code is used for:
 
@@ -83,6 +86,7 @@ Deterministic code is used for:
 - Streamlit can show raw agent responses in the debug panel.
 - LangGraph memory uses a thread ID per Streamlit conversation.
 - LangSmith tracing can be enabled through `.env` to inspect LLM steps and tool calls.
+- Voice transcription returns visible errors instead of sending failed transcripts into the agent.
 
 ## Trade-Offs
 
@@ -90,6 +94,7 @@ Deterministic code is used for:
 - FAA NAS status is a current advisory signal, not a full historical congestion model.
 - Long-haul share uses a transparent proxy because free route-level schedule data is limited.
 - Utilization is based on passengers per runway. A production model should include declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
+- Voice input is submit-after-recording, not a streaming voice assistant. That keeps the bonus feature simple and reviewable.
 - The score is simple by design so reviewers can reproduce and challenge it.
 
 ## Assumptions and Limitations

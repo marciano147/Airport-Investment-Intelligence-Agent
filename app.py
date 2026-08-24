@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import uuid
 from typing import Any
@@ -9,6 +10,7 @@ from typing import Any
 import streamlit as st
 
 from agent import get_agent, response_content
+from voice_utils import transcribe_audio
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -27,6 +29,8 @@ if "last_response" not in st.session_state:
     st.session_state.last_response = None
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
+if "last_audio_hash" not in st.session_state:
+    st.session_state.last_audio_hash = None
 
 with st.sidebar:
     st.header("Controls")
@@ -51,6 +55,23 @@ with st.sidebar:
         if st.button(example, use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": example})
             st.rerun()
+
+    st.divider()
+    st.subheader("Voice Input")
+    audio_data = st.audio_input("Record a question")
+    if audio_data is not None:
+        audio_bytes = audio_data.read()
+        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
+        if audio_hash != st.session_state.last_audio_hash:
+            st.session_state.last_audio_hash = audio_hash
+            with st.spinner("Transcribing with Groq Whisper..."):
+                transcript = transcribe_audio(audio_bytes)
+            if transcript and not transcript.startswith("[Transcription error:"):
+                st.caption(f'Heard: "{transcript}"')
+                st.session_state.messages.append({"role": "user", "content": transcript})
+                st.rerun()
+            else:
+                st.error(transcript or "Transcription failed.")
 
     st.divider()
     st.subheader("Debug / Monitoring")

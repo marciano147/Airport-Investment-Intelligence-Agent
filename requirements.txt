@@ -1,7 +1,8 @@
 langgraph
 langchain
-langchain-openai
 langchain-core
+langchain-groq
+groq
 streamlit
 pandas
 requests

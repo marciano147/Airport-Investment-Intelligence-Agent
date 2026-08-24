@@ -17,6 +17,8 @@
 - [x] Add reusable `run_agent` helper for memory-backed invocation.
 - [x] Add Streamlit chat UI with debug sidebar.
 - [x] Add Streamlit new-conversation control and broader example questions.
+- [x] Switch chat LLM provider to Groq.
+- [x] Add Streamlit voice input with Groq Whisper transcription.
 - [x] Add README and design document.
 - [x] Add tests for scoring and data assembly.
 
@@ -31,6 +33,6 @@
 - [ ] Automate FAA enplanement workbook refresh and schema validation.
 - [ ] Add BTS T-100 route or operations data for a stronger utilization signal.
 - [ ] Replace static long-haul proxy with BTS T-100 or schedule data.
-- [ ] Add end-to-end mocked agent tests that do not call OpenAI.
+- [ ] Add end-to-end mocked agent tests that do not call Groq.
 - [ ] Add CI for pytest and import checks.
 - [ ] Add screenshots or a short demo script for the take-home review.
