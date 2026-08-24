@@ -1,0 +1,11 @@
+iata,year,enplanements,prior_year_enplanements,yoy_growth,source
+BOS,2024,21090721,19962678,0.0565,FAA 2024 commercial service enplanements workbook
+BDL,2024,3285194,3122212,0.0522,FAA 2024 commercial service enplanements workbook
+PVD,2024,1984916,1732909,0.1454,FAA 2024 commercial service enplanements workbook
+MHT,2024,633257,645158,-0.0184,FAA 2024 commercial service enplanements workbook
+PWM,2024,1221913,1114714,0.0962,FAA 2024 commercial service enplanements workbook
+BTV,2024,670636,649557,0.0325,FAA 2024 commercial service enplanements workbook
+BGR,2024,376456,357301,0.0536,FAA 2024 commercial service enplanements workbook
+ORH,2024,112872,104747,0.0776,FAA 2024 commercial service enplanements workbook
+HVN,2024,589409,490255,0.2022,FAA 2024 commercial service enplanements workbook
+ACK,2024,154173,137664,0.1199,FAA 2024 commercial service enplanements workbook

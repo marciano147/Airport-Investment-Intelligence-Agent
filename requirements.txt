@@ -1,0 +1,11 @@
+langgraph
+langchain
+langchain-openai
+langchain-core
+streamlit
+pandas
+requests
+python-dotenv
+pytest
+langsmith
+openpyxl

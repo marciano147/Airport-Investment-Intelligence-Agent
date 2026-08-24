@@ -1,0 +1,11 @@
+iata,name,city,state,type,latitude,longitude,scheduled_service,source
+BOS,Boston Logan International Airport,Boston,MA,large_airport,42.36197,-71.0079,1,OurAirports US airports cache
+BDL,Bradley International Airport,Hartford,CT,large_airport,41.938555,-72.688016,1,OurAirports US airports cache
+PVD,Rhode Island T. F. Green International Airport,Providence/Warwick,RI,large_airport,41.725038,-71.425668,1,OurAirports US airports cache
+MHT,Manchester-Boston Regional Airport,Manchester,NH,medium_airport,42.932598,-71.435699,1,OurAirports US airports cache
+PWM,Portland International Jetport,Portland,ME,large_airport,43.646198,-70.309303,1,OurAirports US airports cache
+BTV,Patrick Leahy Burlington International Airport,Burlington,VT,medium_airport,44.471901,-73.153297,1,OurAirports US airports cache
+BGR,Bangor International Airport,Bangor,ME,medium_airport,44.8074,-68.828102,1,OurAirports US airports cache
+ORH,Worcester Regional Airport,Worcester,MA,medium_airport,42.2673,-71.875702,1,OurAirports US airports cache
+HVN,Tweed New Haven Airport,New Haven,CT,medium_airport,41.263802,-72.886803,1,OurAirports US airports cache
+ACK,Nantucket Memorial Airport,Nantucket,MA,medium_airport,41.253101,-70.060204,1,OurAirports US airports cache
