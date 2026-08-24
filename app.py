@@ -21,7 +21,7 @@ st.set_page_config(
     layout="wide",
 )
 st.title("Airport Investment Intelligence Agent")
-st.caption("Identify promising US airports for terminal and capacity modernization")
+st.caption("Identify promising US airports for terminal and capacity modernization. Powered by Groq.")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -38,6 +38,7 @@ with st.sidebar:
         st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
         st.session_state.messages = []
         st.session_state.last_response = None
+        st.session_state.last_audio_hash = None
         st.rerun()
 
     st.divider()
@@ -52,13 +53,13 @@ with st.sidebar:
         "Compare SFO and LAX on growth and congestion.",
     ]
     for example in examples:
-        if st.button(example, use_container_width=True):
+        if st.button(example, use_container_width=True, key=f"example-{example}"):
             st.session_state.messages.append({"role": "user", "content": example})
             st.rerun()
 
     st.divider()
-    st.subheader("Voice Input")
-    audio_data = st.audio_input("Record a question")
+    st.subheader("Voice Input (Bonus)")
+    audio_data = st.audio_input("Record your question")
     if audio_data is not None:
         audio_bytes = audio_data.read()
         audio_hash = hashlib.sha256(audio_bytes).hexdigest()
@@ -98,7 +99,7 @@ def _content_from_response(response: dict[str, Any]) -> str:
     return response_content(response)
 
 
-if prompt := st.chat_input("Ask about airports..."):
+if prompt := st.chat_input("Ask about airport investment opportunities..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
@@ -119,6 +120,9 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                     ]
                 }
                 content = _content_from_response(response)
+                if show_raw:
+                    with st.expander("Raw agent result"):
+                        st.json(st.session_state.last_response)
             except Exception as exc:
                 logging.exception("Agent invocation failed")
                 content = f"Error: {exc}"
