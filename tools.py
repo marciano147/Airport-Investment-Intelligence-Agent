@@ -344,7 +344,8 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
             "Assumptions & Limitations: FAA delay status is live where available; "
             "otherwise congestion uses deterministic hub baselines. "
             "Passenger metrics are cached from the FAA 2024 commercial-service workbook "
-            "and lag official reporting. Utilization and secondary are transparent proxies."
+            "and lag official reporting. Utilization uses passengers per runway. "
+            "Secondary blends long-haul proxy, airport scale, and runway pressure."
         )
         _log_tool_result("rank_airports_for_expansion", started, "ok")
         return result

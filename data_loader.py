@@ -258,6 +258,15 @@ def get_airports_for_region(region: str = "US") -> list[str]:
     return list(_airports_for_region_cached(region))
 
 
+def get_runway_count(iata: str) -> int:
+    """Return a cached runway count for an IATA code."""
+    airport = airport_by_iata(iata)
+    if not airport:
+        return 1
+    runway_count = int(airport.get("runway_count") or 0)
+    return max(runway_count, 1)
+
+
 @lru_cache(maxsize=256)
 def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, Any], ...], ...]:
     candidates: list[dict[str, Any]] = []
@@ -306,7 +315,7 @@ def utilization_proxy_score(
 
 
 def secondary_proxy_score(candidate: dict[str, Any]) -> float:
-    """Score strategic context from scale, route mix, and runway pressure."""
+    """Score strategic context from route mix, airport scale, and runway pressure."""
     enplanements = float(candidate.get("enplanements") or 0)
     enplanements_per_runway = float(candidate.get("enplanements_per_runway") or 0)
     estimate = long_haul_estimate(str(candidate.get("iata", ""))).get(
@@ -314,17 +323,17 @@ def secondary_proxy_score(candidate: dict[str, Any]) -> float:
     )
     long_haul_pct = float(estimate) if estimate is not None else 12.0
 
-    long_haul_score = _normalize_value(long_haul_pct, 5, 45)
-    scale_score = _normalize_value(enplanements, 2_000_000, 45_000_000)
-    runway_pressure_score = _normalize_value(
-        enplanements_per_runway, 2_000_000, 10_000_000
+    long_haul_score = min(40 + (long_haul_pct * 0.95), 88)
+    scale_score = 45 + (_normalize_value(enplanements, 2_000_000, 45_000_000) * 0.35)
+    runway_pressure_score = 40 + (
+        _normalize_value(enplanements_per_runway, 2_000_000, 10_000_000) * 0.35
     )
     score = (
-        long_haul_score * 0.45
-        + scale_score * 0.35
-        + runway_pressure_score * 0.20
+        long_haul_score * 0.60
+        + scale_score * 0.25
+        + runway_pressure_score * 0.15
     )
-    return round(max(35.0, min(95.0, score)), 1)
+    return round(max(35.0, min(90.0, score)), 1)
 
 
 def cache_stats() -> dict[str, Any]:

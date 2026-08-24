@@ -57,6 +57,14 @@ All component scores are normalized to 0-100 before weighting.
 
 The formula lives in `scoring.py`. Ranking order comes from pure Python, not from model preference.
 
+## Recent Scoring Improvements
+
+Utilization was upgraded from a static placeholder to a runway-based metric using OurAirports runway counts and FAA enplanements. This better reflects capacity pressure as passengers per runway.
+
+Congestion now combines live FAA delay data with deterministic hub baselines so the score remains meaningful even when live delays are zero.
+
+Secondary incorporates a long-haul and international share proxy, airport scale, and runway pressure to capture strategic terminal value for international and long-distance traffic.
+
 ## Data Sources
 
 | Source | Used For | Current Handling |

@@ -4,8 +4,10 @@ from data_loader import (
     clear_caches,
     expansion_candidates,
     get_airports_for_region,
+    get_runway_count,
     load_airports,
     metrics_by_iata,
+    secondary_proxy_score,
 )
 
 
@@ -25,6 +27,11 @@ def test_airport_info_includes_runway_metadata():
     assert airport["iata"] == "BOS"
     assert airport["runway_count"] >= 1
     assert airport["longest_runway_ft"] > 0
+
+
+def test_get_runway_count_returns_safe_cached_count():
+    assert get_runway_count("BOS") >= 1
+    assert get_runway_count("ZZZ") == 1
 
 
 def test_airport_info_accepts_lowercase_and_unknown_iata():
@@ -62,6 +69,21 @@ def test_expansion_candidates_add_deterministic_proxies():
     assert 0 <= bos["utilization"] <= 100
     assert 0 <= pvd["secondary"] <= 100
     assert "runway" in pvd["proxy_notes"].lower()
+
+
+def test_secondary_proxy_rewards_long_haul_route_mix():
+    high_long_haul = {
+        "iata": "JFK",
+        "enplanements": 25_000_000,
+        "enplanements_per_runway": 6_000_000,
+    }
+    low_long_haul = {
+        "iata": "LGA",
+        "enplanements": 25_000_000,
+        "enplanements_per_runway": 6_000_000,
+    }
+
+    assert secondary_proxy_score(high_long_haul) > secondary_proxy_score(low_long_haul)
 
 
 def test_expansion_candidates_falls_back_when_runway_count_is_zero(monkeypatch):
