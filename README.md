@@ -71,11 +71,15 @@ Edit `.env`:
 
 ```bash
 GROQ_API_KEY=gsk-your-key-here
-GROQ_MODEL=qwen/qwen3.6-27b
+GROQ_MODEL=openai/gpt-oss-20b
+GROQ_REASONING_FORMAT=hidden
+GROQ_REASONING_EFFORT=low
+GROQ_MAX_TOKENS=1200
+GROQ_TIMEOUT_SECONDS=45
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 ```
 
-`GROQ_API_KEY` is required for both chat and voice transcription. `GROQ_MODEL` and `GROQ_TRANSCRIPTION_MODEL` are optional defaults.
+`GROQ_API_KEY` is required for both chat and voice transcription. The default chat model is `openai/gpt-oss-20b` because it supports tool calling and responds faster than the larger reasoning models in this app.
 
 Create a Groq key at `https://console.groq.com/keys`.
 

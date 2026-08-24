@@ -15,7 +15,10 @@ def test_agent_uses_memory_checkpointer():
 
 
 def test_agent_defaults_to_groq_model():
-    assert agent.MODEL == "qwen/qwen3.6-27b"
+    assert agent.MODEL == "openai/gpt-oss-20b"
+    assert agent.REASONING_FORMAT == "hidden"
+    assert agent.REASONING_EFFORT == "low"
+    assert agent.MAX_TOKENS == 1200
 
 
 def test_get_agent_requires_groq_key(monkeypatch):

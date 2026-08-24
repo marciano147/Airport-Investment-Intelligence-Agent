@@ -29,7 +29,13 @@ load_dotenv()
 # LLM configuration lives here. The compute layer stays in `tools.py`,
 # `data_loader.py`, and `scoring.py`, so the model routes questions but does not
 # invent rankings or calculate scores itself.
-MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+MAX_TOKENS = int(os.getenv("GROQ_MAX_TOKENS", "1200"))
+TIMEOUT_SECONDS = float(os.getenv("GROQ_TIMEOUT_SECONDS", "45"))
+REASONING_FORMAT = os.getenv("GROQ_REASONING_FORMAT", "hidden")
+REASONING_EFFORT = os.getenv("GROQ_REASONING_EFFORT") or (
+    "none" if MODEL.startswith("qwen/") else "low"
+)
 CHECKPOINTER = MemorySaver()
 
 # Tools are registered once and reused by Streamlit, CLI smoke tests, and direct
@@ -47,7 +53,16 @@ _AGENT: CompiledStateGraph | None = None
 
 def build_agent() -> CompiledStateGraph:
     """Create the LangGraph agent after credentials are available."""
-    llm = ChatGroq(model=MODEL, temperature=0, api_key=os.getenv("GROQ_API_KEY"))
+    llm = ChatGroq(
+        model=MODEL,
+        temperature=0,
+        api_key=os.getenv("GROQ_API_KEY"),
+        reasoning_format=REASONING_FORMAT,
+        reasoning_effort=REASONING_EFFORT,
+        max_tokens=MAX_TOKENS,
+        timeout=TIMEOUT_SECONDS,
+        max_retries=1,
+    )
     system_prompt = load_context()
     return create_react_agent(
         llm,
