@@ -48,6 +48,8 @@ if "voice_input_version" not in st.session_state:
     st.session_state.voice_input_version = 0
 if "voice_status" not in st.session_state:
     st.session_state.voice_status = None
+if "voice_reset_after_response" not in st.session_state:
+    st.session_state.voice_reset_after_response = False
 
 
 def _start_new_conversation() -> None:
@@ -59,6 +61,7 @@ def _start_new_conversation() -> None:
     st.session_state.replay_next = False
     st.session_state.voice_input_version += 1
     st.session_state.voice_status = None
+    st.session_state.voice_reset_after_response = False
 
 
 def _queue_user_message(content: str) -> None:
@@ -79,6 +82,7 @@ def _load_conversation(thread_id: str) -> None:
     st.session_state.replay_next = True
     st.session_state.voice_input_version += 1
     st.session_state.voice_status = None
+    st.session_state.voice_reset_after_response = False
 
 
 def _render_voice_input() -> None:
@@ -91,14 +95,20 @@ def _render_voice_input() -> None:
         else:
             voice_status_slot.error(status_message)
 
-    voice_slot = st.empty()
-    with voice_slot.container():
+    with st.form("voice_input_form", clear_on_submit=True):
         audio_data = st.audio_input(
             "Record a voice question",
             key=f"voice_input_{st.session_state.voice_input_version}",
         )
+        send_voice = st.form_submit_button("Send Voice", use_container_width=True)
+
+    if not send_voice:
+        return
 
     if audio_data is None:
+        message = "Record a voice question before sending."
+        st.session_state.voice_status = ("error", message)
+        voice_status_slot.error(message)
         return
 
     audio_bytes = audio_data.getvalue()
@@ -111,9 +121,9 @@ def _render_voice_input() -> None:
         transcript = transcribe_audio(audio_bytes)
 
     if transcription_succeeded(transcript):
-        voice_slot.empty()
         st.session_state.voice_input_version += 1
         st.session_state.voice_status = ("success", f'Heard: "{transcript}"')
+        st.session_state.voice_reset_after_response = True
         voice_status_slot.success(st.session_state.voice_status[1])
         _queue_user_message(transcript)
         return
@@ -243,3 +253,6 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
 
         st.markdown(content)
         _append_and_save("assistant", content)
+        if st.session_state.voice_reset_after_response:
+            st.session_state.voice_reset_after_response = False
+            st.rerun()

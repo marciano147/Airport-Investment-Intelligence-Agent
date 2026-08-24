@@ -26,3 +26,12 @@ def test_voice_transcript_path_does_not_force_immediate_rerun():
     risky_pattern = '_queue_user_message(transcript)\n                st.rerun()'
 
     assert risky_pattern not in source
+
+
+def test_voice_input_uses_explicit_submit_form():
+    source = APP_PATH.read_text(encoding="utf-8")
+
+    assert 'st.form("voice_input_form", clear_on_submit=True)' in source
+    assert 'st.form_submit_button("Send Voice"' in source
+    assert "voice_slot.empty()" not in source
+    assert "voice_reset_after_response" in source

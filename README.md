@@ -110,7 +110,7 @@ If `streamlit` is not on your PATH, call it from the venv:
 .venv/bin/streamlit run app.py
 ```
 
-Voice input appears in the left sidebar under Controls. After recording, the app transcribes the audio and submits the transcript as a normal chat message. Past conversations appear in the sidebar and are stored locally in `data/chat_history.db`; when you reopen one, the saved context is replayed on the next message so follow-ups still work.
+Voice input appears in the left sidebar under Controls. Record a question, then click `Send Voice`; the app transcribes the audio and submits the transcript as a normal chat message. Past conversations appear in the sidebar and are stored locally in `data/chat_history.db`; when you reopen one, the saved context is replayed on the next message so follow-ups still work.
 
 ## Troubleshooting
 
