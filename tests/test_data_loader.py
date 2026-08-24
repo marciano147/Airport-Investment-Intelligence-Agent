@@ -1,12 +1,17 @@
 from data_loader import (
+    _NAS_STATUS_CACHE,
     airport_by_iata,
     cache_stats,
     clear_caches,
     expansion_candidates,
+    fetch_nas_status_delays,
     get_airports_for_region,
+    get_faa_status,
     get_runway_count,
     load_airports,
     metrics_by_iata,
+    parse_delay_minutes,
+    parse_nas_status_xml,
     secondary_proxy_score,
 )
 
@@ -127,3 +132,110 @@ def test_data_loader_cache_stats_track_repeated_lookup():
     assert first == second
     assert stats["airport_by_iata"]["hits"] >= 1
     assert stats["load_airports"]["hits"] >= 1
+
+
+def test_parse_delay_minutes_handles_common_faa_text():
+    assert parse_delay_minutes("20 minutes") == 20
+    assert parse_delay_minutes("1 hour and 30 minutes") == 90
+    assert parse_delay_minutes("31") == 31
+    assert parse_delay_minutes("") is None
+
+
+def test_parse_nas_status_xml_extracts_active_program_minutes():
+    xml = """
+    <AIRPORT_STATUS_INFORMATION>
+      <Update_Time>Mon Aug 24 14:58:46 2026 GMT</Update_Time>
+      <Delay_type>
+        <Name>Ground Delay Programs</Name>
+        <Ground_Delay_List>
+          <Ground_Delay>
+            <ARPT>SAN</ARPT>
+            <Reason>airport volume</Reason>
+            <Avg>20 minutes</Avg>
+            <Max>48 minutes</Max>
+          </Ground_Delay>
+        </Ground_Delay_List>
+      </Delay_type>
+      <Delay_type>
+        <Name>General Arrival/Departure Delay Info</Name>
+        <Arrival_Departure_Delay_List>
+          <Delay>
+            <ARPT>PHX</ARPT>
+            <Reason>TM Initiatives:ESP:VOL</Reason>
+            <Arrival_Departure Type="Departure">
+              <Min>31 minutes</Min>
+              <Max>45 minutes</Max>
+              <Trend>Increasing</Trend>
+            </Arrival_Departure>
+          </Delay>
+        </Arrival_Departure_Delay_List>
+      </Delay_type>
+      <Delay_type>
+        <Name>Ground Stops</Name>
+        <Ground_Stop_List>
+          <Ground_Stop>
+            <ARPT>EWR</ARPT>
+            <Reason>weather</Reason>
+          </Ground_Stop>
+        </Ground_Stop_List>
+      </Delay_type>
+    </AIRPORT_STATUS_INFORMATION>
+    """
+
+    parsed = parse_nas_status_xml(xml)
+
+    assert parsed["SAN"]["delay_minutes"] == 20.0
+    assert parsed["SAN"]["program"] == "Ground Delay Programs"
+    assert parsed["SAN"]["source_detail"] == "avg_delay_minutes"
+    assert parsed["PHX"]["delay_minutes"] == 38.0
+    assert parsed["PHX"]["source_detail"] == "departure_delay_minutes"
+    assert parsed["EWR"]["delay_minutes"] == 60.0
+    assert parsed["EWR"]["source_detail"] == "ground_stop_proxy_minutes"
+
+
+def test_fetch_nas_status_delays_uses_ttl_cache(monkeypatch):
+    _NAS_STATUS_CACHE["data"] = None
+    _NAS_STATUS_CACHE["expires_at"] = 0.0
+    calls = {"count": 0}
+
+    class Response:
+        text = """
+        <AIRPORT_STATUS_INFORMATION>
+          <Delay_type>
+            <Name>Ground Delay Programs</Name>
+            <Ground_Delay_List>
+              <Ground_Delay>
+                <ARPT>BOS</ARPT>
+                <Reason>weather</Reason>
+                <Avg>25 minutes</Avg>
+              </Ground_Delay>
+            </Ground_Delay_List>
+          </Delay_type>
+        </AIRPORT_STATUS_INFORMATION>
+        """
+
+        def raise_for_status(self):
+            return None
+
+    def fake_get(*args, **kwargs):
+        calls["count"] += 1
+        return Response()
+
+    monkeypatch.setattr("data_loader.requests.get", fake_get)
+
+    first = fetch_nas_status_delays()
+    second = fetch_nas_status_delays()
+
+    assert calls["count"] == 1
+    assert first == second
+    assert first["BOS"]["delay_minutes"] == 25.0
+
+
+def test_get_faa_status_falls_back_when_no_active_nas_program(monkeypatch):
+    monkeypatch.setattr("data_loader.fetch_nas_status_delays", lambda: {})
+
+    result = get_faa_status("LAX")
+
+    assert result["iata"] == "LAX"
+    assert result["delay_minutes"] == 0
+    assert result["status"] == "No active FAA NAS traffic management program"

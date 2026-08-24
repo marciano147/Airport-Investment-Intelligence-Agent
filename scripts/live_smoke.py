@@ -79,10 +79,16 @@ def check_groq_model_access() -> str:
 def check_agent_query() -> str:
     from agent import run_agent
 
-    answer = run_agent(
-        "Compare LAX and SNA. Return one short table.",
-        thread_id="live-smoke-agent-query",
-    )
+    try:
+        answer = run_agent(
+            "Compare LAX and SNA. Return one short table.",
+            thread_id="live-smoke-agent-query",
+        )
+    except Exception as exc:
+        error_text = str(exc).lower()
+        if "tokens per day" in error_text or "tpd" in error_text:
+            raise SkipCheck("Groq daily token quota is exhausted")
+        raise
     required_fragments = ["LAX", "SNA", "Composite"]
     missing = [fragment for fragment in required_fragments if fragment not in answer]
     if missing:

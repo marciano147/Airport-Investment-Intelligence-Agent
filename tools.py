@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import logging
 import time
-import xml.etree.ElementTree as ET
 from typing import Any
 
-import requests
 from langchain_core.tools import tool
 
 from data_loader import (
     FAA_STATUS_URL,
     airport_by_iata,
     expansion_candidates,
+    fetch_nas_status_delays,
+    get_faa_status,
     metrics_by_iata,
     secondary_proxy_score,
     utilization_proxy_score,
@@ -29,65 +29,10 @@ from scoring import (
 
 logger = logging.getLogger(__name__)
 
-FAA_STATUS_TTL_SECONDS = 300
-_FAA_STATUS_CACHE: dict[str, Any] = {"expires_at": 0.0, "data": None}
-
 
 def _status_delay_scores() -> dict[str, dict[str, Any]]:
-    """Fetch and cache FAA status feed entries as delay-minute signals."""
-    now = time.time()
-    if _FAA_STATUS_CACHE["data"] is not None and now < _FAA_STATUS_CACHE["expires_at"]:
-        logger.info("compute_layer source=faa_status_cache status=hit")
-        return {
-            iata: dict(status)
-            for iata, status in _FAA_STATUS_CACHE["data"].items()
-        }
-
-    started = time.perf_counter()
-    response = requests.get(FAA_STATUS_URL, timeout=20)
-    response.raise_for_status()
-    root = ET.fromstring(response.text)
-    scores: dict[str, dict[str, Any]] = {}
-
-    # FAA's XML groups several advisory types. Convert each type into a simple
-    # delay-minute value so scoring can stay deterministic.
-    for delay_type in root.findall(".//Delay_type"):
-        name = delay_type.findtext("Name", default="FAA status").strip()
-        for airport in delay_type.findall(".//Airport") + delay_type.findall(
-            ".//Ground_Delay"
-        ):
-            iata = (airport.findtext("ARPT") or "").strip().upper()
-            if not iata:
-                continue
-            delay_minutes = _delay_minutes_for_status(name)
-            scores[iata] = {
-                "delay_minutes": max(
-                    delay_minutes, scores.get(iata, {}).get("delay_minutes", 0)
-                ),
-                "status": name,
-                "reason": airport.findtext(
-                    "Reason", default="FAA delay/advisory"
-                ).strip(),
-            }
-
-    _FAA_STATUS_CACHE["data"] = scores
-    _FAA_STATUS_CACHE["expires_at"] = now + FAA_STATUS_TTL_SECONDS
-    logger.info(
-        "compute_layer source=faa_status_live status=ok duration_ms=%.1f rows=%s",
-        (time.perf_counter() - started) * 1000,
-        len(scores),
-    )
-    return {iata: dict(status) for iata, status in scores.items()}
-
-
-def _delay_minutes_for_status(status_name: str) -> int:
-    if "Closure" in status_name:
-        return 60
-    if "Ground" in status_name:
-        return 45
-    if "Delay" in status_name:
-        return 30
-    return 15
+    """Return FAA NAS active programs as delay-minute signals."""
+    return fetch_nas_status_delays()
 
 
 def _airport_score_input(
@@ -110,7 +55,7 @@ def _airport_score_input(
         candidate["iata"],
         {
             "delay_minutes": 0,
-            "status": "No active FAA delay advisory in current feed",
+            "status": "No active FAA NAS traffic management program",
         },
     )
     return {**candidate, **delay}
@@ -170,26 +115,15 @@ def get_congestion(iata: str) -> dict[str, Any]:
     started = time.perf_counter()
     try:
         normalized = iata.strip().upper()
-        live_scores = _status_delay_scores()
-        if normalized in live_scores:
-            _log_tool_result("get_congestion", started, "ok")
-            live_status = live_scores[normalized]
-            return {
-                "iata": normalized,
-                **live_status,
-                "congestion_score": round(
-                    get_congestion_score(live_status.get("delay_minutes", 0), normalized),
-                    1,
-                ),
-                "source": FAA_STATUS_URL,
-            }
+        live_status = get_faa_status(normalized)
         _log_tool_result("get_congestion", started, "ok")
         return {
             "iata": normalized,
-            "delay_minutes": 0,
-            "congestion_score": round(get_congestion_score(0, normalized), 1),
-            "status": "No active FAA delay advisory in current feed",
-            "note": "Score uses deterministic baseline congestion because no live FAA advisory is active.",
+            **live_status,
+            "congestion_score": round(
+                get_congestion_score(live_status.get("delay_minutes", 0), normalized),
+                1,
+            ),
             "source": FAA_STATUS_URL,
         }
     except Exception as exc:
@@ -200,7 +134,7 @@ def get_congestion(iata: str) -> dict[str, Any]:
             "delay_minutes": 0,
             "congestion_score": round(get_congestion_score(0, iata), 1),
             "error": str(exc),
-            "suggestion": "FAA status feed may be unavailable. Retry or inspect logs.",
+            "suggestion": "FAA NAS Status feed may be unavailable. Retry or inspect logs.",
         }
 
 
@@ -334,7 +268,7 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
                 airport["iata"],
                 {
                     "delay_minutes": 0,
-                    "status": "No active FAA delay advisory in current feed",
+                    "status": "No active FAA NAS traffic management program",
                 },
             )
             airports_data.append({**airport, **delay})
@@ -350,7 +284,8 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
             "Scores use the mandatory weighted formula: Congestion 35%, Growth 30%, "
             "Utilization 25%, Secondary 10%.\n\n"
             "Assumptions & Limitations: FAA delay status is live where available; "
-            "otherwise congestion uses deterministic hub baselines. "
+            "active NAS programs use parsed delay minutes; otherwise congestion "
+            "uses deterministic hub baselines. "
             "Passenger metrics are cached from the FAA 2024 commercial-service workbook "
             "and lag official reporting. Utilization uses passengers per runway. "
             "Secondary blends long-haul proxy, airport scale, and runway pressure."

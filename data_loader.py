@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import csv
 import logging
+import re
+import time
+import xml.etree.ElementTree as ET
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -23,6 +26,7 @@ ENPLANEMENTS_CACHE = DATA_DIR / "enplanements.csv"
 OURAIRPORTS_URL = "https://davidmegginson.github.io/ourairports-data/airports.csv"
 RUNWAYS_URL = "https://davidmegginson.github.io/ourairports-data/runways.csv"
 FAA_STATUS_URL = "https://nasstatus.faa.gov/api/airport-status-information"
+FAA_STATUS_TTL_SECONDS = 120
 FAA_ENPLANEMENTS_URL = (
     "https://www.faa.gov/airports/planning_capacity/passenger_allcargo_stats/passenger"
 )
@@ -64,6 +68,8 @@ REGION_MAP = {
     "all": MAJOR_US_AIRPORTS,
     "nationwide": MAJOR_US_AIRPORTS,
 }
+
+_NAS_STATUS_CACHE: dict[str, Any] = {"expires_at": 0.0, "data": None}
 
 
 def _read_csv(path: Path) -> list[dict[str, str]]:
@@ -275,6 +281,92 @@ def get_runway_count(iata: str) -> int:
     return max(runway_count, 1)
 
 
+def parse_delay_minutes(text: str | None) -> float | None:
+    """Extract minutes from FAA strings like `20 minutes` or `1 hour 5 minutes`."""
+    if not text:
+        return None
+    normalized = text.lower().strip()
+    hours_match = re.search(r"(\d+(?:\.\d+)?)\s*hour", normalized)
+    minutes_match = re.search(r"(\d+(?:\.\d+)?)\s*minute", normalized)
+    hours = float(hours_match.group(1)) if hours_match else 0.0
+    minutes = float(minutes_match.group(1)) if minutes_match else 0.0
+    if hours_match or minutes_match:
+        return (hours * 60) + minutes
+
+    bare_number = re.search(r"(\d+(?:\.\d+)?)", normalized)
+    if bare_number:
+        return float(bare_number.group(1))
+    return None
+
+
+def fetch_nas_status_delays() -> dict[str, dict[str, Any]]:
+    """Fetch FAA NAS active programs as airport-level live delay signals."""
+    now = time.time()
+    cached = _NAS_STATUS_CACHE["data"]
+    if cached is not None and now < _NAS_STATUS_CACHE["expires_at"]:
+        logger.info("compute_layer source=nas_status_cache status=hit")
+        return {iata: dict(status) for iata, status in cached.items()}
+
+    started = time.perf_counter()
+    try:
+        response = requests.get(FAA_STATUS_URL, timeout=20)
+        response.raise_for_status()
+        scores = parse_nas_status_xml(response.text)
+        _NAS_STATUS_CACHE["data"] = scores
+        _NAS_STATUS_CACHE["expires_at"] = now + FAA_STATUS_TTL_SECONDS
+        logger.info(
+            "compute_layer source=nas_status_live status=ok duration_ms=%.1f rows=%s",
+            (time.perf_counter() - started) * 1000,
+            len(scores),
+        )
+        return {iata: dict(status) for iata, status in scores.items()}
+    except Exception:
+        logger.exception("NAS Status fetch failed")
+        if cached is not None:
+            logger.info("compute_layer source=nas_status_cache status=stale")
+            return {iata: dict(status) for iata, status in cached.items()}
+        raise
+
+
+def parse_nas_status_xml(xml_text: str) -> dict[str, dict[str, Any]]:
+    """Parse FAA NAS XML into one strongest active program per airport."""
+    root = ET.fromstring(xml_text)
+    scores: dict[str, dict[str, Any]] = {}
+    update_time = (root.findtext("Update_Time") or "").strip()
+
+    for delay_type in root.findall(".//Delay_type"):
+        program = (delay_type.findtext("Name") or "FAA NAS Status").strip()
+        _parse_ground_delays(delay_type, program, update_time, scores)
+        _parse_arrival_departure_delays(delay_type, program, update_time, scores)
+        _parse_ground_stops(delay_type, program, update_time, scores)
+        _parse_closures(delay_type, program, update_time, scores)
+
+    return scores
+
+
+def get_faa_status(iata: str) -> dict[str, Any]:
+    """Return live NAS delay status or a clean zero-delay baseline path."""
+    normalized = iata.strip().upper()
+    active_programs = fetch_nas_status_delays()
+    if normalized in active_programs:
+        return {
+            "iata": normalized,
+            **active_programs[normalized],
+            "status": "Active FAA NAS traffic management program",
+            "note": "Live FAA NAS Status traffic management program.",
+        }
+
+    return {
+        "iata": normalized,
+        "delay_minutes": 0,
+        "status": "No active FAA NAS traffic management program",
+        "reason": "",
+        "program": "",
+        "source": FAA_STATUS_URL,
+        "note": "No active FAA NAS program; scoring may use deterministic hub baseline.",
+    }
+
+
 @lru_cache(maxsize=256)
 def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, Any], ...], ...]:
     """Assemble airport facts, passenger metrics, and deterministic proxy inputs."""
@@ -382,3 +474,127 @@ def _normalize_value(value: float, min_val: float, max_val: float) -> float:
         return 50.0
     scaled = (value - min_val) / (max_val - min_val) * 100
     return max(0.0, min(100.0, scaled))
+
+
+def _parse_ground_delays(
+    delay_type: ET.Element,
+    program: str,
+    update_time: str,
+    scores: dict[str, dict[str, Any]],
+) -> None:
+    for ground_delay in delay_type.findall("./Ground_Delay_List/Ground_Delay"):
+        iata = (ground_delay.findtext("ARPT") or "").strip().upper()
+        if not iata:
+            continue
+        delay = (
+            parse_delay_minutes(ground_delay.findtext("Avg"))
+            or parse_delay_minutes(ground_delay.findtext("Max"))
+            or 30.0
+        )
+        _record_nas_delay(
+            scores,
+            iata,
+            delay,
+            program,
+            ground_delay.findtext("Reason"),
+            update_time,
+            "avg_delay_minutes",
+        )
+
+
+def _parse_arrival_departure_delays(
+    delay_type: ET.Element,
+    program: str,
+    update_time: str,
+    scores: dict[str, dict[str, Any]],
+) -> None:
+    for delay in delay_type.findall("./Arrival_Departure_Delay_List/Delay"):
+        iata = (delay.findtext("ARPT") or "").strip().upper()
+        if not iata:
+            continue
+        reason = delay.findtext("Reason")
+        for arrival_departure in delay.findall("./Arrival_Departure"):
+            min_delay = parse_delay_minutes(arrival_departure.findtext("Min"))
+            max_delay = parse_delay_minutes(arrival_departure.findtext("Max"))
+            minutes = _midpoint_or_known_delay(min_delay, max_delay) or 30.0
+            delay_kind = arrival_departure.attrib.get("Type", "Arrival/Departure")
+            _record_nas_delay(
+                scores,
+                iata,
+                minutes,
+                program,
+                reason,
+                update_time,
+                f"{delay_kind.lower()}_delay_minutes",
+            )
+
+
+def _parse_ground_stops(
+    delay_type: ET.Element,
+    program: str,
+    update_time: str,
+    scores: dict[str, dict[str, Any]],
+) -> None:
+    for ground_stop in delay_type.findall("./Ground_Stop_List/Ground_Stop"):
+        iata = (ground_stop.findtext("ARPT") or "").strip().upper()
+        if iata:
+            _record_nas_delay(
+                scores,
+                iata,
+                60.0,
+                program,
+                ground_stop.findtext("Reason"),
+                update_time,
+                "ground_stop_proxy_minutes",
+            )
+
+
+def _parse_closures(
+    delay_type: ET.Element,
+    program: str,
+    update_time: str,
+    scores: dict[str, dict[str, Any]],
+) -> None:
+    for closure in delay_type.findall("./Airport_Closure_List/Airport"):
+        iata = (closure.findtext("ARPT") or "").strip().upper()
+        if iata:
+            _record_nas_delay(
+                scores,
+                iata,
+                60.0,
+                program,
+                closure.findtext("Reason"),
+                update_time,
+                "closure_proxy_minutes",
+            )
+
+
+def _record_nas_delay(
+    scores: dict[str, dict[str, Any]],
+    iata: str,
+    delay_minutes: float,
+    program: str,
+    reason: str | None,
+    update_time: str,
+    metric: str,
+) -> None:
+    existing_delay = float(scores.get(iata, {}).get("delay_minutes", -1))
+    if delay_minutes < existing_delay:
+        return
+    scores[iata] = {
+        "delay_minutes": round(delay_minutes, 1),
+        "program": program,
+        "reason": (reason or "").strip(),
+        "source": FAA_STATUS_URL,
+        "source_detail": metric,
+        "updated_at": update_time,
+    }
+
+
+def _midpoint_or_known_delay(
+    min_delay: float | None,
+    max_delay: float | None,
+) -> float | None:
+    if min_delay is not None and max_delay is not None:
+        return (min_delay + max_delay) / 2
+    return max_delay if max_delay is not None else min_delay

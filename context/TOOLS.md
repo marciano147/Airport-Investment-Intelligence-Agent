@@ -1,7 +1,7 @@
 Tool usage skills:
 
 - `get_airport_info(iata)`: Use for basic airport facts, location, type, and runway information.
-- `get_congestion(iata)`: Use for current FAA delay, ground stop, closure, and advisory status.
+- `get_congestion(iata)`: Use for current FAA NAS Status programs: ground delay programs, ground stops, closures, and arrival/departure delays.
 - `get_passenger_metrics(iata)`: Use for enplanement numbers and year-over-year growth.
 - `rank_airports_for_expansion(region, top_n)`: Mandatory for ranking, best-candidate, and comparison questions. Always call this instead of ranking manually.
 - `compare_airports(iata1, iata2)`: Use for any direct head-to-head comparison between two airports.
@@ -11,6 +11,8 @@ Note: Some handoff notes call the passenger tool `get_passenger_metrics_tool`. I
 
 Best practices:
 - Combine congestion and passenger metrics for unmet-demand questions.
+- If NAS Status reports an active program, explain that the delay minutes come from the live FAA feed.
+- If NAS Status has no active program, explain that the congestion score uses the deterministic hub baseline instead of treating congestion as zero.
 - Call `compare_airports` for direct comparison questions instead of assembling the comparison manually.
 - Call `get_long_haul_estimate` for long-haul or international mix questions.
 - If a tool returns an error or approximate data, say so immediately and explain the limitation.

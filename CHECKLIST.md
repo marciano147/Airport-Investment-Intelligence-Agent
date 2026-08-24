@@ -33,6 +33,7 @@
 - [x] Audit recent LangSmith traces and add shared retry handling for transient Groq rate limits.
 - [x] Move voice recorder out of Streamlit form lifecycle and add voice event logs.
 - [x] Add per-conversation delete controls in chat history.
+- [x] Upgrade congestion to parse FAA NAS Status delay minutes before falling back to hub baselines.
 
 ## Verification
 

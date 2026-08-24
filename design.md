@@ -50,7 +50,7 @@ Composite =
 
 All component scores are normalized to 0-100 before weighting.
 
-- Congestion Score: live FAA delay/advisory signal combined with deterministic baseline tiers for major hubs. This prevents the highest-weight signal from collapsing to zero when the current FAA feed has no active events.
+- Congestion Score: live FAA NAS Status traffic-management programs first, deterministic baseline tiers second. Ground delay programs use reported average delay minutes, arrival/departure delays use the midpoint of the reported range, and ground stops or closures use a high-pressure proxy. This prevents the highest-weight signal from collapsing to zero when the current FAA feed has no active program.
 - Passenger Growth Score: year-over-year enplanement growth normalized from -5% to +12%.
 - Utilization Score: passengers per runway, scaled relative to the selected candidate set and capped below full saturation before final normalization.
 - Secondary Score: strategic proxy based on airport scale, long-haul route-mix estimate, and runway pressure. Defaults are explicit when richer data is unavailable.
@@ -61,7 +61,7 @@ The formula lives in `scoring.py`. Ranking order comes from pure Python, not fro
 
 Utilization was upgraded from a static placeholder to a runway-based metric using OurAirports runway counts and FAA enplanements. This better reflects capacity pressure as passengers per runway.
 
-Congestion now combines live FAA delay data with deterministic hub baselines so the score remains meaningful even when live delays are zero.
+Congestion now parses live FAA NAS Status programs for real delay minutes where available. If no program is active for an airport, deterministic hub baselines keep chronic congestion pressure from being treated as zero.
 
 Secondary incorporates a long-haul and international share proxy, airport scale, and runway pressure to capture strategic terminal value for international and long-distance traffic.
 
@@ -71,7 +71,7 @@ Secondary incorporates a long-haul and international share proxy, airport scale,
 | --- | --- | --- |
 | OurAirports | Airport metadata, IATA coverage, runway data | Cached CSVs in `data/` |
 | FAA passenger boarding data | Enplanements and YoY growth | Cached 2024 commercial-service CSV |
-| FAA NAS airport status | Current delay and advisory signal | Live request plus deterministic hub baseline |
+| FAA NAS airport status | Current ground delays, ground stops, closures, and arrival/departure delays | Live XML parse plus deterministic hub baseline |
 | Static proxy tables | Long-haul, international share, and baseline congestion | Approximate, labeled in tool output and design notes |
 | Groq Whisper | Voice question transcription | Optional Streamlit microphone flow |
 
@@ -108,7 +108,7 @@ Deterministic code is used for:
 ## Trade-Offs
 
 - Cached FAA enplanement data keeps the demo stable, but it needs refresh work for future years.
-- FAA NAS status is a current advisory signal, not a full historical congestion model. Baseline congestion tiers are a deterministic fallback for one-day scope, not a substitute for historical OPSNET or ASPM delay data.
+- FAA NAS Status is a current traffic-management-program signal, not a full historical congestion model. It often returns no active program even for busy airports. Baseline congestion tiers are a deterministic fallback for one-day scope, not a substitute for historical OPSNET, ASPM, or BTS ASQP delay data.
 - Long-haul share uses a transparent proxy because free route-level schedule data is limited.
 - Utilization is based on passengers per runway. A production model should include BTS T-100 seats/departures, declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
 - Voice input is submit-after-recording, not a streaming voice assistant. That keeps the bonus feature simple and reviewable.

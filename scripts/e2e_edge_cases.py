@@ -194,7 +194,10 @@ def _run_agent_with_retry(message: str, thread_id: str, attempts: int = 3) -> st
             return run_agent(message, thread_id=thread_id)
         except Exception as exc:
             last_error = exc
-            if "rate limit" not in str(exc).lower() or attempt == attempts - 1:
+            error_text = str(exc).lower()
+            if "tokens per day" in error_text or "tpd" in error_text:
+                raise SkipCheck("Groq daily token quota is exhausted")
+            if "rate limit" not in error_text or attempt == attempts - 1:
                 raise
             time.sleep(5 * (attempt + 1))
     raise RuntimeError(f"agent query failed after retries: {last_error}")

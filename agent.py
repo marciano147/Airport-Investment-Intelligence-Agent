@@ -90,7 +90,7 @@ def invoke_agent_messages(
             )
         except Exception as exc:
             last_error = exc
-            if "rate limit" not in str(exc).lower() or attempt == attempts - 1:
+            if not _is_retryable_rate_limit(exc) or attempt == attempts - 1:
                 raise
             time.sleep(2 * (attempt + 1))
     raise RuntimeError(f"Agent query failed after retries: {last_error}")
@@ -103,6 +103,16 @@ def run_agent(user_message: str, thread_id: str = "default") -> str:
         thread_id=thread_id,
     )
     return response_content(response)
+
+
+def _is_retryable_rate_limit(exc: Exception) -> bool:
+    """Retry only short provider throttles, not exhausted daily quota."""
+    text = str(exc).lower()
+    if "rate limit" not in text:
+        return False
+    if "tokens per day" in text or "tpd" in text:
+        return False
+    return True
 
 
 agent = get_agent() if os.getenv("GROQ_API_KEY") else None

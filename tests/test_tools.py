@@ -1,6 +1,4 @@
 from tools import (
-    _FAA_STATUS_CACHE,
-    _status_delay_scores,
     compare_airports,
     get_airport_info,
     get_congestion,
@@ -40,58 +38,35 @@ def test_airport_and_passenger_tools_return_errors_for_unknown_iata():
 
 
 def test_get_congestion_returns_fallback_when_faa_feed_is_invalid(monkeypatch):
-    _FAA_STATUS_CACHE["data"] = None
-    _FAA_STATUS_CACHE["expires_at"] = 0.0
-
-    class Response:
-        text = "<not-valid"
-
-        def raise_for_status(self):
-            return None
-
-    monkeypatch.setattr("tools.requests.get", lambda *args, **kwargs: Response())
+    monkeypatch.setattr("tools.get_faa_status", lambda iata: (_ for _ in ()).throw(ValueError("bad xml")))
 
     result = get_congestion.invoke({"iata": "BOS"})
 
     assert result["iata"] == "BOS"
     assert result["delay_minutes"] == 0
     assert "error" in result
-    assert "FAA status feed" in result["suggestion"]
+    assert "FAA NAS Status feed" in result["suggestion"]
 
 
-def test_faa_status_scores_use_ttl_cache(monkeypatch):
-    _FAA_STATUS_CACHE["data"] = None
-    _FAA_STATUS_CACHE["expires_at"] = 0.0
-    calls = {"count": 0}
+def test_get_congestion_uses_live_nas_program(monkeypatch):
+    monkeypatch.setattr(
+        "tools.get_faa_status",
+        lambda iata: {
+            "iata": "SAN",
+            "delay_minutes": 20.0,
+            "status": "Active FAA NAS traffic management program",
+            "program": "Ground Delay Programs",
+            "reason": "airport volume",
+            "source": "nas",
+        },
+    )
 
-    class Response:
-        text = """
-        <Airport_Status>
-          <Delay_type>
-            <Name>Ground Delay</Name>
-            <Airport>
-              <ARPT>BOS</ARPT>
-              <Reason>weather</Reason>
-            </Airport>
-          </Delay_type>
-        </Airport_Status>
-        """
+    result = get_congestion.invoke({"iata": "SAN"})
 
-        def raise_for_status(self):
-            return None
-
-    def fake_get(*args, **kwargs):
-        calls["count"] += 1
-        return Response()
-
-    monkeypatch.setattr("tools.requests.get", fake_get)
-
-    first = _status_delay_scores()
-    second = _status_delay_scores()
-
-    assert calls["count"] == 1
-    assert first == second
-    assert first["BOS"]["delay_minutes"] == 45
+    assert result["iata"] == "SAN"
+    assert result["delay_minutes"] == 20.0
+    assert result["program"] == "Ground Delay Programs"
+    assert result["congestion_score"] >= 40
 
 
 def test_long_haul_estimate_known_and_unknown_airports():
