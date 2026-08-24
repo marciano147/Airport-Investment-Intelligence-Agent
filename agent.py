@@ -23,8 +23,14 @@ from tools import (
 
 load_dotenv()
 
+# LLM configuration lives here. The compute layer stays in `tools.py`,
+# `data_loader.py`, and `scoring.py`, so the model routes questions but does not
+# invent rankings or calculate scores itself.
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 CHECKPOINTER = MemorySaver()
+
+# Tools are registered once and reused by Streamlit, CLI smoke tests, and direct
+# agent calls. Keep this list aligned with `context/TOOLS.md`.
 AGENT_TOOLS = [
     get_airport_info,
     get_congestion,

@@ -139,6 +139,14 @@ python scripts/live_smoke.py
 
 The live smoke script checks Groq model access, one agent query, LangSmith access, Groq Whisper transcription, and Streamlit health.
 
+For a broader live e2e and edge-case audit:
+
+```bash
+python scripts/e2e_edge_cases.py
+```
+
+This checks tool rankings, comparisons, long-haul estimates, invalid inputs, empty regions, several live agent questions, same-thread follow-up memory, voice transcription, and Streamlit boot.
+
 ## Example Questions
 
 - Rank the top 5 US airports for terminal expansion.

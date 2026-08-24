@@ -34,6 +34,7 @@ _FAA_STATUS_CACHE: dict[str, Any] = {"expires_at": 0.0, "data": None}
 
 
 def _status_delay_scores() -> dict[str, dict[str, Any]]:
+    """Fetch and cache FAA status feed entries as delay-minute signals."""
     now = time.time()
     if _FAA_STATUS_CACHE["data"] is not None and now < _FAA_STATUS_CACHE["expires_at"]:
         logger.info("compute_layer source=faa_status_cache status=hit")
@@ -48,6 +49,8 @@ def _status_delay_scores() -> dict[str, dict[str, Any]]:
     root = ET.fromstring(response.text)
     scores: dict[str, dict[str, Any]] = {}
 
+    # FAA's XML groups several advisory types. Convert each type into a simple
+    # delay-minute value so scoring can stay deterministic.
     for delay_type in root.findall(".//Delay_type"):
         name = delay_type.findtext("Name", default="FAA status").strip()
         for airport in delay_type.findall(".//Airport") + delay_type.findall(
@@ -90,6 +93,7 @@ def _delay_minutes_for_status(status_name: str) -> int:
 def _airport_score_input(
     iata: str, live_scores: dict[str, dict[str, Any]]
 ) -> dict[str, Any]:
+    """Build one airport record ready for scoring or return a structured error."""
     airport = airport_by_iata(iata)
     metrics = metrics_by_iata(iata)
     if not airport:
@@ -113,6 +117,7 @@ def _airport_score_input(
 
 
 def _apply_pair_proxies(left: dict[str, Any], right: dict[str, Any]) -> None:
+    """Apply the same utilization and secondary semantics used by rankings."""
     max_per_runway = max(
         float(left["enplanements_per_runway"]),
         float(right["enplanements_per_runway"]),
@@ -130,6 +135,7 @@ def _comparison_row(label: str, left: Any, right: Any) -> str:
 
 
 def _log_tool_result(tool_name: str, started: float, status: str) -> None:
+    """Log tool timing for debugging, LangSmith review, and bottleneck checks."""
     logger.info(
         "compute_layer tool=%s status=%s duration_ms=%.1f",
         tool_name,
@@ -319,6 +325,8 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
     """Rank airports for terminal/capacity expansion with deterministic scores."""
     started = time.perf_counter()
     try:
+        # Ranking uses enriched candidate rows from `data_loader`, then overlays
+        # the live FAA advisory snapshot before pure-Python scoring.
         live_scores = _status_delay_scores()
         airports_data = []
         for airport in expansion_candidates(region):

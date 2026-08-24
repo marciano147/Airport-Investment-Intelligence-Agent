@@ -25,6 +25,7 @@
 - [x] Add tests for scoring and data assembly.
 - [x] Add CI-safe tests for tools, prompts, voice, app render, and edge cases.
 - [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
+- [x] Add broad live e2e edge-case audit for tools, agent flows, follow-up memory, voice, and Streamlit boot.
 - [x] Add compute-layer caches and tool timing logs.
 - [x] Add persistent SQLite chat history and move voice input into the sidebar controls.
 - [x] Recalibrate scoring with congestion baselines, capped runway utilization, and strategic secondary proxies.

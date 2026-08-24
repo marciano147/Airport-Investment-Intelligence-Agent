@@ -27,6 +27,8 @@ def transcribe_audio(audio_bytes: bytes, filename: str = "question.wav") -> str:
         return "[Transcription error: set GROQ_API_KEY in .env]"
 
     try:
+        # The Streamlit app treats transcription errors as visible UI status, so
+        # return strings instead of raising raw SDK exceptions into the chat flow.
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         transcription = client.audio.transcriptions.create(
             file=(filename, audio_bytes),

@@ -11,6 +11,8 @@ def load_context(context_dir: str | Path = "context") -> str:
     base = Path(context_dir)
     parts: list[str] = []
 
+    # File order matters: identity and tool-use rules should appear before
+    # scoring and answer-style guidance.
     for name in CONTEXT_FILES:
         path = base / name
         if path.exists():

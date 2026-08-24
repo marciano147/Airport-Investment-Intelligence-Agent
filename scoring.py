@@ -12,6 +12,8 @@ WEIGHTS = {
     "secondary": 0.10,
 }
 
+# Deterministic fallback when FAA's live feed has no active delay event. Without
+# this, the highest-weight component can collapse to zero for every airport.
 BASELINE_CONGESTION = {
     "ATL": 75,
     "ORD": 78,
@@ -74,6 +76,8 @@ def get_congestion_score(delay_minutes: Any, iata: str = "") -> float:
     if delay <= 0:
         return float(baseline)
 
+    # Live delays should matter, but a quiet current feed should not erase known
+    # structural congestion at major hubs.
     live_score = normalize(delay, 0, 45)
     blended = (baseline * 0.55) + (live_score * 0.45)
     return max(float(baseline), live_score, blended)
@@ -104,6 +108,8 @@ def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
     secondary_input = _number_or_default(airport.get("secondary"), 50)
     secondary = normalize(secondary_input, 0, 100)
 
+    # Keep the composite as plain Python math for reviewer reproducibility and
+    # to make the LLM/compute-layer separation explicit.
     composite = (
         congestion * WEIGHTS["congestion"]
         + growth * WEIGHTS["growth"]

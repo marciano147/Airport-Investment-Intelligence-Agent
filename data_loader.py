@@ -50,6 +50,8 @@ MAJOR_US_AIRPORTS = [
     "BWI",
 ]
 
+# Prototype region support. Known regions map to curated major airports; two
+# letter state codes are resolved dynamically from the FAA enplanement cache.
 REGION_MAP = {
     "new england": ["BOS", "MHT", "PVD", "BDL", "PWM", "BTV"],
     "northeast": ["BOS", "JFK", "LGA", "EWR", "PHL", "BDL", "PVD"],
@@ -90,6 +92,9 @@ def download_ourairports() -> None:
     raw_airports = list(csv.DictReader(airport_response.text.splitlines()))
     raw_runways = list(csv.DictReader(runway_response.text.splitlines()))
 
+    # OurAirports stores runway rows separately from airport rows. Collapse them
+    # once into per-airport runway count and longest-runway metadata for fast
+    # scoring later.
     runway_stats: dict[str, dict[str, int]] = {}
     for runway in raw_runways:
         ident = runway.get("airport_ident", "")
@@ -167,6 +172,7 @@ def _load_airports_cached() -> tuple[dict[str, str], ...]:
 
 
 def load_airports(refresh: bool = False) -> list[dict[str, Any]]:
+    """Load cached US scheduled-service airports, refreshing OurAirports if asked."""
     if refresh:
         AIRPORTS_CACHE.unlink(missing_ok=True)
         RUNWAYS_CACHE.unlink(missing_ok=True)
@@ -183,6 +189,7 @@ def _load_enplanements_cached() -> tuple[dict[str, str], ...]:
 
 
 def load_enplanements() -> list[dict[str, Any]]:
+    """Load the cleaned FAA enplanement cache used for passenger growth."""
     return [dict(row) for row in _load_enplanements_cached()]
 
 
@@ -232,6 +239,7 @@ def metrics_by_iata(iata: str) -> dict[str, Any] | None:
 
 @lru_cache(maxsize=256)
 def _airports_for_region_cached(region: str = "US") -> tuple[str, ...]:
+    """Resolve a user-facing region or state code into candidate IATA codes."""
     normalized = region.lower().strip()
     if normalized in REGION_MAP:
         return tuple(REGION_MAP[normalized])
@@ -269,6 +277,7 @@ def get_runway_count(iata: str) -> int:
 
 @lru_cache(maxsize=256)
 def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, Any], ...], ...]:
+    """Assemble airport facts, passenger metrics, and deterministic proxy inputs."""
     candidates: list[dict[str, Any]] = []
     for iata in get_airports_for_region(region):
         airport = airport_by_iata(iata)
@@ -323,6 +332,9 @@ def secondary_proxy_score(candidate: dict[str, Any]) -> float:
     )
     long_haul_pct = float(estimate) if estimate is not None else 12.0
 
+    # Secondary is a strategic terminal-value proxy. Long-haul share dominates,
+    # with airport scale and runway pressure keeping large constrained hubs from
+    # being treated like small route-mix outliers.
     long_haul_score = min(40 + (long_haul_pct * 0.95), 88)
     scale_score = 45 + (_normalize_value(enplanements, 2_000_000, 45_000_000) * 0.35)
     runway_pressure_score = 40 + (

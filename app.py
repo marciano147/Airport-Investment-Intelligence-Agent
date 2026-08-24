@@ -32,6 +32,9 @@ st.caption("Identify promising US airports for terminal and capacity modernizati
 
 init_store()
 
+# Streamlit reruns the whole file after each interaction. These session values
+# preserve chat messages, selected thread, debug output, and voice-recorder state
+# across reruns.
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_response" not in st.session_state:
@@ -53,6 +56,7 @@ if "voice_reset_after_response" not in st.session_state:
 
 
 def _start_new_conversation() -> None:
+    """Reset UI and memory handles for a fresh analyst conversation."""
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
     st.session_state.messages = []
     st.session_state.last_response = None
@@ -65,15 +69,18 @@ def _start_new_conversation() -> None:
 
 
 def _queue_user_message(content: str) -> None:
+    """Defer user input until the main chat-rendering section can append it."""
     st.session_state.pending_prompt = content
 
 
 def _append_and_save(role: str, content: str) -> None:
+    """Append a visible chat message and persist it to local SQLite history."""
     st.session_state.messages.append({"role": role, "content": content})
     save_message(st.session_state.thread_id, role, content)
 
 
 def _load_conversation(thread_id: str) -> None:
+    """Restore a saved sidebar conversation and replay context on next turn."""
     st.session_state.thread_id = thread_id
     st.session_state.messages = load_messages(thread_id)
     st.session_state.last_response = None
@@ -86,6 +93,7 @@ def _load_conversation(thread_id: str) -> None:
 
 
 def _render_voice_input() -> None:
+    """Render sidebar voice recording and submit transcript as normal chat text."""
     st.subheader("Voice Input")
     voice_status_slot = st.empty()
     if st.session_state.voice_status:
@@ -121,6 +129,8 @@ def _render_voice_input() -> None:
         transcript = transcribe_audio(audio_bytes)
 
     if transcription_succeeded(transcript):
+        # Reset the recorder only after the assistant response is saved. Resetting
+        # during recorder completion can produce Streamlit's transient audio error.
         st.session_state.voice_input_version += 1
         st.session_state.voice_status = ("success", f'Heard: "{transcript}"')
         st.session_state.voice_reset_after_response = True
@@ -134,6 +144,8 @@ def _render_voice_input() -> None:
 
 
 with st.sidebar:
+    # Sidebar order is intentional: controls and voice first, then history,
+    # examples, and debugging.
     st.header("Controls")
     if st.button("New Conversation", use_container_width=True):
         _start_new_conversation()
@@ -213,6 +225,8 @@ if prompt := st.chat_input("Ask about airport investment opportunities..."):
     _queue_user_message(prompt)
 
 if st.session_state.pending_prompt:
+    # Text input, example buttons, and voice transcripts all converge here so
+    # every user turn uses the same persistence and agent invocation path.
     pending = st.session_state.pending_prompt
     st.session_state.pending_prompt = None
     _append_and_save("user", pending)
@@ -224,6 +238,9 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
             try:
                 latest_user_message = st.session_state.messages[-1]
                 if st.session_state.replay_next:
+                    # Restored SQLite conversations do not automatically exist
+                    # inside LangGraph's in-memory checkpointer after a restart,
+                    # so replay saved messages once before the next answer.
                     input_messages = [
                         {"role": message["role"], "content": message["content"]}
                         for message in st.session_state.messages

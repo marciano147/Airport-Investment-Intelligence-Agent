@@ -13,10 +13,12 @@ DB_PATH = Path("data") / "chat_history.db"
 
 
 def _resolve_db_path(db_path: str | Path | None) -> Path:
+    """Resolve test-provided paths while keeping the app default simple."""
     return Path(db_path) if db_path is not None else DB_PATH
 
 
 def init_store(db_path: str | Path | None = None) -> None:
+    """Create conversation and message tables if they do not already exist."""
     path = _resolve_db_path(db_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(path) as conn:
@@ -45,6 +47,7 @@ def init_store(db_path: str | Path | None = None) -> None:
 
 
 def list_conversations(db_path: str | Path | None = None) -> list[dict[str, Any]]:
+    """Return recent sidebar conversations ordered by last activity."""
     path = _resolve_db_path(db_path)
     init_store(path)
     with sqlite3.connect(path) as conn:
@@ -64,6 +67,7 @@ def load_messages(
     thread_id: str,
     db_path: str | Path | None = None,
 ) -> list[dict[str, str]]:
+    """Load one conversation as Streamlit/LangGraph-compatible messages."""
     path = _resolve_db_path(db_path)
     init_store(path)
     with sqlite3.connect(path) as conn:
@@ -86,6 +90,7 @@ def save_message(
     content: str,
     db_path: str | Path | None = None,
 ) -> None:
+    """Persist a chat message and create/update its conversation metadata."""
     path = _resolve_db_path(db_path)
     init_store(path)
     now = _utc_now()
@@ -120,6 +125,7 @@ def export_messages_json(
     thread_id: str,
     db_path: str | Path | None = None,
 ) -> str:
+    """Export a conversation for the sidebar download button."""
     return json.dumps(load_messages(thread_id, db_path), indent=2)
 
 
