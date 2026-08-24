@@ -27,9 +27,9 @@ Main files:
 - `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, long-haul proxies, and unmet-demand pressure.
 - `data_loader.py`: public data caches, region/state handling, runway counts, and expansion candidate assembly.
 - `scoring.py`: deterministic score calculation, absolute utilization, congestion provenance, and unmet-demand pressure.
-- `long_haul.py`: static long-haul and international share proxy table.
+- `long_haul.py`: loader for labeled long-haul share proxies in `data/long_haul_proxies.csv`.
 - `voice_utils.py`: Groq Whisper transcription helper for recorded questions.
-- `context/*.md`: Hermes-style prompt context for role, tools, scoring, assumptions, and answer style.
+- `context/*.md`: modular system-prompt files for role, tools, scoring, assumptions, and answer style.
 
 The architecture has two explicit layers:
 
@@ -60,9 +60,15 @@ All component scores are normalized to 0-100 before weighting.
 
 The formula lives in `scoring.py`. Ranking order comes from pure Python, not from model preference.
 
-## Recent Scoring Improvements
+Congestion receives the largest composite weight because persistent operating pressure is the clearest available signal that existing infrastructure is constrained. Passenger growth captures whether that pressure is likely to increase, while utilization measures existing runway capacity pressure. Secondary strategic factors receive a lower weight because their inputs contain more proxy assumptions.
 
-Utilization was upgraded from a peer-relative placeholder to an absolute passengers-per-runway score on a fixed 1M-8M scale. SFO has the same utilization whether it is ranked nationally, ranked in California, or compared with SNA.
+For unmet-demand pressure, congestion and utilization receive higher weights because the index should primarily represent existing capacity constraints; growth acts as a forward-looking modifier.
+
+The 1M–8M passengers-per-runway range is a prototype normalization bound chosen to distinguish low- from high-pressure commercial airports while preventing peer selection from changing an airport's score. It is not an FAA-defined threshold. Production bounds should be calibrated against historical airport capacity data.
+
+## Scoring Implementation Notes
+
+Utilization uses an absolute passengers-per-runway score on a fixed 1M-8M scale. SFO has the same utilization whether it is ranked nationally, ranked in California, or compared with SNA.
 
 Congestion now parses live FAA NAS Status programs for real delay minutes where available. If no program is active for an airport, labeled prototype structural baselines in `data/congestion_baselines.csv` keep chronic congestion pressure from being treated as zero. Tool output reports live delay, baseline, source, and confidence separately.
 
@@ -76,8 +82,8 @@ Secondary incorporates a long-haul share proxy, airport scale, and runway pressu
 | --- | --- | --- |
 | OurAirports | Airport metadata, IATA coverage, runway data | Cached CSVs in `data/` |
 | FAA passenger boarding data | Enplanements and YoY growth | Cached 2024 commercial-service CSV |
-| FAA NAS airport status | Current ground delays, ground stops, closures, and arrival/departure delays | Live XML parse plus deterministic hub baseline |
-| Static proxy tables | Long-haul share and baseline congestion | Approximate, labeled in CSV/tool output |
+| FAA NAS airport status | Current ground delays, ground stops, closures, and arrival/departure delays | Live XML parse plus labeled prototype structural baseline |
+| Prototype assumption CSVs | Structural congestion and long-haul share | `data/congestion_baselines.csv` and `data/long_haul_proxies.csv` |
 | Groq Whisper | Voice question transcription | Optional Streamlit microphone flow |
 
 ## Where AI Is Used
@@ -133,5 +139,5 @@ Deterministic code is used for:
 - Add OpenSky ADS-B density as an optional live operational-pressure signal.
 - Add state and metro-area airport discovery beyond the current curated region map.
 - Add a repeatable data refresh script for FAA enplanements.
-- Add an evaluation set for example questions and expected tool calls. The four original assignment examples now have deterministic tool tests in `tests/test_assignment_examples.py`.
+- Add an evaluation set for example questions and expected tool calls.
 - Persist conversation state outside process memory for deployed use.

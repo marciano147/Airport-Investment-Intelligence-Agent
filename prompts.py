@@ -1,4 +1,4 @@
-"""Hermes-style markdown context loader."""
+"""Modular agent system-prompt loader."""
 
 from pathlib import Path
 

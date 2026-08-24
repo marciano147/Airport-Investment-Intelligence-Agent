@@ -1,33 +1,26 @@
 # Airport Investment Intelligence Agent
 
-AI decision-support agent for identifying US airports with promising terminal or capacity expansion potential.
+AI decision-support for identifying US airports with stronger terminal or capacity expansion potential.
 
-The agent uses deterministic Python scoring for rankings and comparisons. The LLM handles question routing, tool selection, explanation, and conversational follow-ups.
+The LLM routes the question and explains results. Python calculates rankings, comparisons, and unmet-demand pressure from public data plus labeled prototype assumptions. This is analyst support, not a financial model.
 
-## Features
+## Assignment coverage
 
-- Rank US airports by expansion opportunity using a fixed scoring formula.
-- Compare any two airports on congestion, passenger growth, utilization, and composite score.
-- Estimate unmet-demand pressure as a labeled proxy index, not unserved flights.
-- Parse live FAA NAS Status traffic-management programs, then use calibrated congestion baselines when no active program exists.
-- Estimate long-haul or international share with a labeled proxy table.
-- Answer follow-up questions through LangGraph conversation memory.
-- Record a voice question in Streamlit and transcribe it with Groq Whisper.
-- Reopen and export past conversations from local SQLite chat history.
-- Show assumptions, data limits, and score breakdowns.
-- Inspect raw agent responses in the Streamlit debug panel.
-- Enable LangSmith tracing for tool and LLM review.
+| Assignment example | Implementation |
+| --- | --- |
+| New England expansion | Deterministic ranking |
+| LAX vs SNA congestion | Comparison with live vs structural provenance |
+| ANC long-haul | Explicitly labeled share proxy |
+| SFO unmet demand | Deterministic pressure index, not unserved flights |
 
-## Tech Stack
+Example prompts:
 
-- LangGraph and LangChain
-- Groq chat model through `langchain-groq`
-- Groq Whisper speech-to-text through the `groq` SDK
-- Streamlit chat UI
-- Public aviation data from OurAirports, FAA passenger boarding data, and FAA NAS status
-- Pytest for deterministic scoring and tool tests
+- Which airports in New England are strong candidates for terminal expansion?
+- Compare LAX and SNA congestion levels.
+- What is the percentage of long-haul flights out of Anchorage airport?
+- What is the unmet flight demand in SFO airport and why?
 
-## How it works
+## Architecture
 
 The LLM decides which calculation to run. Python decides the numerical answer.
 
@@ -44,146 +37,56 @@ flowchart TB
   P --> F[FAA passengers]
   P --> W[Runway data]
   P --> N[FAA live NAS]
-  P --> B[Congestion baselines CSV]
+  P --> B[Prototype assumption CSVs]
   P --> A
   A --> S
 ```
 
-See `design.md` for scoring weights, data sources, and trade-offs.
+## Scoring
 
-## Setup
+```text
+Composite =
+  Congestion 35% + Growth 30% + Utilization 25% + Secondary 10%
 
-This is a Python project. Do not run `npm i`.
-
-Prerequisites: Python 3.11+ (3.12 works). Create a virtual environment, install `requirements.txt`, then copy `.env.example` to `.env`.
-
-**Windows (PowerShell):**
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-copy .env.example .env
+Unmet Demand Pressure =
+  Congestion 40% + Utilization 35% + Growth 25%
 ```
 
-**Windows (Git Bash):**
-
-```bash
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
-
-**macOS / Linux:**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
-
-The venv must stay activated for `streamlit`, `pytest`, and `pip`. If you open a new terminal, activate it again.
-
-Shortcut for macOS / Linux:
-
-```bash
-make setup
-```
-
-Edit `.env`:
-
-```bash
-LLM_PROVIDER=groq
-LLM_FALLBACK_ENABLED=true
-LLM_MAX_TOKENS=1200
-LLM_TIMEOUT_SECONDS=45
-
-GROQ_API_KEY=gsk-your-key-here
-GROQ_MODEL=openai/gpt-oss-20b
-GROQ_REASONING_FORMAT=hidden
-GROQ_REASONING_EFFORT=low
-GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
-
-# Automatic OpenRouter fallback
-OPENROUTER_API_KEY=sk-or-your-key-here
-OPENROUTER_MODEL=nvidia/nemotron-3.5-lightning:free
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-```
-
-`GROQ_API_KEY` is required for both chat and voice transcription. The default chat model is `openai/gpt-oss-20b` because it supports tool calling and responds faster than the larger reasoning models in this app.
-
-Create a Groq key at `https://console.groq.com/keys`.
-
-When both `GROQ_API_KEY` and `OPENROUTER_API_KEY` are set, the agent tries Groq first and automatically falls back to OpenRouter for chat if Groq hits a quota, timeout, or request-size limit. Groq Whisper still handles voice transcription.
-
-To force OpenRouter as the primary chat provider:
-
-```bash
-LLM_PROVIDER=openrouter
-OPENROUTER_API_KEY=sk-or-your-key-here
-OPENROUTER_MODEL=nvidia/nemotron-3.5-lightning:free
-```
-
-Optional LangSmith tracing:
-
-```bash
-LANGSMITH_TRACING=true
-LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
-LANGSMITH_API_KEY=your-langsmith-key
-LANGSMITH_PROJECT=airport-agent
-```
+Utilization is passengers per runway on a fixed 1M–8M scale, so an airport keeps the same score in national rankings, regional rankings, and pairwise comparisons. Full rationale is in `design.md`.
 
 ## Data
 
-The repo includes demo-ready CSV caches:
+Measured / public:
 
-- `data/airports.csv`: US scheduled-service airport metadata from OurAirports.
-- `data/runways.csv`: runway counts and longest-runway fields derived from OurAirports.
-- `data/enplanements.csv`: FAA 2024 commercial-service passenger boarding cache.
-- `data/congestion_baselines.csv`: labeled prototype structural congestion proxies.
+- `data/airports.csv` and `data/runways.csv`: OurAirports cache
+- `data/enplanements.csv`: FAA 2024 commercial-service passenger boardings
 
-Airport and runway caches can refresh automatically if missing. The enplanement cache is checked in for review stability and should be refreshed manually when FAA workbook formats or reporting years change. See `data/README.md` for the cache inventory.
+Explicit prototype assumptions:
 
-## Run
+- `data/congestion_baselines.csv`: structural congestion heuristics
+- `data/long_haul_proxies.csv`: long-haul share heuristics
 
-With the venv activated:
+Airport and runway caches can refresh if missing. The enplanement cache is checked in for review stability. See `data/README.md`.
+
+## Quick start
+
+Python 3.11+ (3.12 works).
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 streamlit run app.py
 ```
 
-macOS / Linux shortcut:
+On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`. On Windows Git Bash, use `source .venv/Scripts/activate`.
 
-```bash
-make run
-```
+Set `GROQ_API_KEY` in `.env`. Create a key at https://console.groq.com/keys. Optional OpenRouter fallback and LangSmith fields are documented in `.env.example`.
 
-If `streamlit` is not on your PATH, call it from the venv:
+Voice input is in the sidebar: Record, then Stop & send. Chat history is stored locally in `data/chat_history.db`.
 
-```bash
-# Windows
-.venv\Scripts\streamlit.exe run app.py
-
-# macOS / Linux
-.venv/bin/streamlit run app.py
-```
-
-Voice input appears in the left sidebar under Controls. Click `Record`, speak, then `Stop & send`. The app transcribes with Groq Whisper and submits the transcript as a normal chat message. If transcription fails, use `Retry transcription` or record again. Past conversations appear in the sidebar and are stored locally in `data/chat_history.db`; when you reopen one, the saved context is replayed on the next message so follow-ups still work.
-
-## Troubleshooting
-
-**`streamlit: command not found`**  
-The venv is not activated, or Streamlit is not installed in it. Activate `.venv`, then run `pip install -r requirements.txt`. On Windows Git Bash the activate script is `source .venv/Scripts/activate`, not `source .venv/bin/activate`.
-
-**`ModuleNotFoundError: No module named 'langchain_groq'`** (or another package from `requirements.txt`)  
-Dependencies were not fully installed. With the venv activated, run `pip install -r requirements.txt`, then refresh the Streamlit page or restart the server.
-
-**`npm i` / Node**  
-There is no `package.json`. Install with `pip`, not npm.
-
-## Test
+## Tests
 
 Offline tests do not call Groq, LangSmith, FAA, or Streamlit over the network:
 
@@ -191,70 +94,28 @@ Offline tests do not call Groq, LangSmith, FAA, or Streamlit over the network:
 pytest tests/ -v
 ```
 
-macOS / Linux shortcut:
-
-```bash
-make check
-```
-
-Opt-in live smoke checks use `.env` and real services:
+`make check` runs pytest and compile checks. Opt-in live checks:
 
 ```bash
 python scripts/live_smoke.py
-```
-
-macOS / Linux shortcut:
-
-```bash
-make smoke
-```
-
-The live smoke script checks Groq model access, one agent query, LangSmith access, Groq Whisper transcription, and Streamlit health.
-
-For a broader live e2e and edge-case audit:
-
-```bash
 python scripts/e2e_edge_cases.py
 ```
 
-macOS / Linux shortcut:
-
-```bash
-make e2e
-```
-
-This checks tool rankings, comparisons, long-haul estimates, invalid inputs, empty regions, several live agent questions, same-thread follow-up memory, voice transcription, and Streamlit boot.
-
-## Example Questions
-
-- Rank the top 5 US airports for terminal expansion.
-- Rank California airports for capacity investment potential.
-- Which airports in New England are strong candidates?
-- Compare LAX and SNA congestion levels.
-- Estimate long-haul share at ANC.
-- What is the unmet flight demand at SFO and why?
-- Why did the top airport score higher than the others?
-
-## Project Structure
+## Project structure
 
 ```text
-app.py          Streamlit chat UI and debug panel
-agent.py        LangGraph agent, tool registry, and memory helper
-chat_store.py   SQLite conversation history store
-tools.py        LangChain tools for rankings, comparisons, long-haul, and airport data
-data_loader.py  Cached public data loading and candidate assembly
-scoring.py      Deterministic scoring model
-long_haul.py    Long-haul proxy estimates
-voice_utils.py  Groq Whisper transcription helper
-prompts.py      Hermes-style context loader
-context/        SOUL, TOOLS, SCORING, ASSUMPTIONS, and WRITING prompts
-data/           Review-stable CSV caches and local ignored chat history
-tests/          Unit tests
-scripts/        Opt-in live smoke checks
-Makefile        Local setup, run, test, smoke, e2e, and cleanup commands
-design.md       Architecture and scoring notes
+app.py          Streamlit chat UI
+agent.py        LangGraph agent, tool registry, and memory
+chat_store.py   SQLite conversation history
+tools.py        Ranking, comparison, long-haul, and unmet-demand tools
+data_loader.py  Cached public data and candidate assembly
+scoring.py      Deterministic scoring
+long_haul.py    Long-haul proxy loader
+voice_utils.py  Groq Whisper transcription
+prompts.py      Modular system-prompt loader
+context/        Role, tools, scoring, assumptions, and writing prompts
+data/           Public caches and prototype assumption CSVs
+tests/          Offline unit and assignment tests
+scripts/        Opt-in live smoke and e2e checks
+design.md       Architecture, weights, and limitations
 ```
-
-## Notes
-
-This is a one-day prototype. It uses public data and transparent proxies, so it should be treated as analyst decision support, not a financial model.

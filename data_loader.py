@@ -364,7 +364,7 @@ def get_faa_status(iata: str) -> dict[str, Any]:
         "reason": "",
         "program": "",
         "source": FAA_STATUS_URL,
-        "note": "No active FAA NAS program; scoring may use deterministic hub baseline.",
+        "note": "No active FAA NAS program; scoring may use a labeled prototype structural baseline.",
     }
 
 
@@ -398,11 +398,6 @@ def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, A
 def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
     """Return ranked-scope airports enriched with public metrics and proxies."""
     return [dict(candidate) for candidate in _expansion_candidates_cached(region)]
-
-
-def utilization_proxy_score(enplanements_per_runway: float) -> float:
-    """Score runway pressure on a fixed passengers-per-runway scale."""
-    return utilization_score(enplanements_per_runway)
 
 
 def secondary_proxy_score(candidate: dict[str, Any]) -> float:

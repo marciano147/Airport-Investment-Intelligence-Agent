@@ -97,7 +97,7 @@ def utilization_score(enplanements_per_runway: Any) -> float:
 
 
 def get_congestion_score(delay_minutes: Any, iata: str = "") -> float:
-    """Score congestion from live FAA delay plus a deterministic hub baseline."""
+    """Score congestion from live FAA delay plus a labeled structural baseline."""
     return congestion_breakdown(delay_minutes, iata)["congestion_score"]
 
 

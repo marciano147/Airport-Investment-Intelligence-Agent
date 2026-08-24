@@ -80,6 +80,14 @@ def _comparison_row(label: str, left: Any, right: Any) -> str:
     return f"| {label} | {left} | {right} |"
 
 
+def _source_footer() -> str:
+    return (
+        "Sources: OurAirports airport/runway cache; FAA 2024 commercial-service "
+        "enplanements; FAA NAS Status at query time. Prototype assumptions: "
+        "data/congestion_baselines.csv and data/long_haul_proxies.csv."
+    )
+
+
 def _log_tool_result(tool_name: str, started: float, status: str) -> None:
     """Log tool timing for debugging, LangSmith review, and bottleneck checks."""
     logger.info(
@@ -259,7 +267,8 @@ def compare_airports(iata1: str, iata2: str) -> str:
             "Structural baselines are labeled prototype heuristics in "
             "data/congestion_baselines.csv, not FAA-published scores. "
             "Unmet-demand pressure is a proxy index from congestion, utilization, and growth; "
-            "do not invent a different classification.",
+            "do not invent a different classification.\n"
+            f"{_source_footer()}",
         ]
         _log_tool_result("compare_airports", started, "ok")
         return "\n".join(lines)
@@ -331,6 +340,12 @@ def get_unmet_demand(iata: str) -> dict[str, Any]:
                 "source": breakdown["source"],
                 "confidence": breakdown["confidence"],
             },
+            "sources": {
+                "enplanements": "FAA 2024 commercial-service passenger boarding cache",
+                "airports_runways": "OurAirports cache",
+                "congestion_live": "FAA NAS Status at query time",
+                "congestion_baseline": "data/congestion_baselines.csv (prototype heuristic)",
+            },
         }
     except Exception as extra:
         logger.exception("get_unmet_demand failed")
@@ -373,7 +388,8 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
             "Passenger metrics are cached from the FAA 2024 commercial-service workbook "
             "and lag official reporting. Utilization uses passengers per runway on a "
             "fixed 1M-8M scale. Secondary blends long-haul share proxy, airport scale, "
-            "and runway pressure."
+            "and runway pressure.\n\n"
+            f"{_source_footer()}"
         )
         _log_tool_result("rank_airports_for_expansion", started, "ok")
         return result

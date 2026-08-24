@@ -1,6 +1,6 @@
 Assumptions, uncertainty, and scoping:
 
-- Data sources are public and free: FAA, OurAirports, and FAA/BTS passenger datasets.
+- Data sources are public and free: FAA and OurAirports.
 - Passenger statistics usually lag by several months.
 - "Unmet demand" is a pressure-index proxy from congestion, utilization, and growth. It is not true origin-destination booking data or a count of unserved flights.
 - Congestion uses live FAA NAS Status traffic-management programs when present. If no active program exists, labeled prototype structural baselines from `data/congestion_baselines.csv` are applied so chronic pressure is not treated as zero.

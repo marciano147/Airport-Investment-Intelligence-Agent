@@ -91,6 +91,7 @@ def test_rank_tool_accepts_us_default_without_live_faa(monkeypatch):
     assert "Ranking for region: US" in result
     assert "Composite" in result
     assert "Assumptions & Limitations" in result
+    assert "OurAirports" in result
 
 
 def test_rank_tool_falls_back_to_baselines_when_nas_feed_fails(monkeypatch):
