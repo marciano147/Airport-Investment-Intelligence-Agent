@@ -33,7 +33,7 @@ load_dotenv()
 # invent rankings or calculate scores itself.
 PROVIDER = os.getenv("LLM_PROVIDER", "groq").strip().lower()
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "liquid/lfm-2.5-2.6b:free")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/free")
 MODEL = OPENROUTER_MODEL if PROVIDER == "openrouter" else GROQ_MODEL
 FALLBACK_ENABLED = os.getenv("LLM_FALLBACK_ENABLED", "true").strip().lower() == "true"
 MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", os.getenv("GROQ_MAX_TOKENS", "1200")))

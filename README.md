@@ -83,7 +83,7 @@ GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 
 # Automatic OpenRouter fallback
 OPENROUTER_API_KEY=sk-or-your-key-here
-OPENROUTER_MODEL=liquid/lfm-2.5-2.6b:free
+OPENROUTER_MODEL=openrouter/free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ```
 
@@ -98,7 +98,7 @@ To force OpenRouter as the primary chat provider:
 ```bash
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=sk-or-your-key-here
-OPENROUTER_MODEL=liquid/lfm-2.5-2.6b:free
+OPENROUTER_MODEL=openrouter/free
 ```
 
 Optional LangSmith tracing:

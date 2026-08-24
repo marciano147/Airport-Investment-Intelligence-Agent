@@ -21,7 +21,7 @@ def test_agent_defaults_to_groq_model():
     assert agent.REASONING_FORMAT == "hidden"
     assert agent.REASONING_EFFORT == "low"
     assert agent.MAX_TOKENS == 1200
-    assert agent.OPENROUTER_MODEL == "liquid/lfm-2.5-2.6b:free"
+    assert agent.OPENROUTER_MODEL == "openrouter/free"
 
 
 def test_get_agent_requires_groq_key(monkeypatch):
