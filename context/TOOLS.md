@@ -7,6 +7,8 @@ Tool usage skills:
 - `compare_airports(iata1, iata2)`: Use for any direct head-to-head comparison between two airports.
 - `get_long_haul_estimate(iata)`: Use for long-haul, international share, route-mix, and similar questions. Always disclose that it is an approximate proxy.
 
+Note: Some handoff notes call the passenger tool `get_passenger_metrics_tool`. In this codebase the registered tool name is `get_passenger_metrics`.
+
 Best practices:
 - Combine congestion and passenger metrics for unmet-demand questions.
 - Call `compare_airports` for direct comparison questions instead of assembling the comparison manually.

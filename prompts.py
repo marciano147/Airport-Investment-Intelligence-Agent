@@ -16,5 +16,7 @@ def load_context(context_dir: str | Path = "context") -> str:
         if path.exists():
             content = path.read_text(encoding="utf-8").strip()
             parts.append(f"### {name.replace('.md', '').upper()}\n{content}")
+        else:
+            print(f"Warning: {name} not found")
 
     return "\n\n----------------\n\n".join(parts)
