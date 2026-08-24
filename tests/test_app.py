@@ -17,6 +17,10 @@ def test_app_renders_core_chat_controls(monkeypatch, tmp_path):
     assert any(button.label == "New Conversation" for button in app.button)
     assert any("New England" in button.label for button in app.button)
     assert any("Voice Input" in subheader.value for subheader in app.subheader)
+    assert any(
+        checkbox.label == "Replay full saved chat history"
+        for checkbox in app.checkbox
+    )
     assert app.chat_input[0].placeholder == "Ask about airport investment opportunities..."
 
 
@@ -66,3 +70,14 @@ def test_chat_history_has_delete_control():
     assert 'help=f"Delete: {title}"' not in source
     assert '"Delete saved chat"' not in source
     assert '"Delete Selected Chat"' not in source
+
+
+def test_app_records_request_diagnostics_and_formats_agent_errors():
+    source = APP_PATH.read_text(encoding="utf-8")
+
+    assert "provider_diagnostics(" in source
+    assert "last_request_diagnostics" in source
+    assert "format_agent_error(exc)" in source
+    assert 'replay_mode = "full_saved_history"' in source
+    assert 'replay_mode = "latest_turn_after_restore"' in source
+    assert 'replay_mode = "latest_turn_with_memory"' in source

@@ -16,9 +16,11 @@ def test_agent_uses_memory_checkpointer():
 
 def test_agent_defaults_to_groq_model():
     assert agent.MODEL == "openai/gpt-oss-20b"
+    assert agent.PROVIDER == "groq"
     assert agent.REASONING_FORMAT == "hidden"
     assert agent.REASONING_EFFORT == "low"
     assert agent.MAX_TOKENS == 1200
+    assert agent.OPENROUTER_MODEL == "liquid/lfm-2.5-2.6b:free"
 
 
 def test_get_agent_requires_groq_key(monkeypatch):
@@ -41,6 +43,19 @@ def test_response_content_extracts_last_message():
 
 def test_response_content_handles_empty_messages():
     assert agent.response_content({"messages": []}) == "No response returned."
+
+
+def test_provider_diagnostics_are_safe_metadata():
+    diagnostics = agent.provider_diagnostics(
+        message_count=3,
+        replay_mode="full_saved_history",
+    )
+
+    assert diagnostics["provider"] == "groq"
+    assert diagnostics["model"] == "openai/gpt-oss-20b"
+    assert diagnostics["message_count_sent"] == 3
+    assert diagnostics["replay_mode"] == "full_saved_history"
+    assert "api" not in diagnostics
 
 
 def test_run_agent_invokes_configured_thread(monkeypatch):
@@ -103,3 +118,28 @@ def test_invoke_agent_messages_does_not_retry_daily_quota(monkeypatch):
         raise AssertionError("Expected daily quota error")
 
     assert calls["count"] == 1
+
+
+def test_format_agent_error_for_daily_quota():
+    error = RuntimeError(
+        "Rate limit reached on tokens per day. Please try again in 11m13.92s."
+    )
+
+    message = agent.format_agent_error(error)
+
+    assert "daily quota is exhausted" in message
+    assert "Retry in 11m13.92s" in message
+    assert "rate_limit_exceeded" not in message
+
+
+def test_format_agent_error_for_request_too_large():
+    error = RuntimeError(
+        "Request too large for model qwen/qwen3.6-27b on tokens per minute "
+        "(TPM): Limit 8000, Requested 8459, please reduce your message size."
+    )
+
+    message = agent.format_agent_error(error)
+
+    assert "request is too large" in message
+    assert "full-history replay" in message
+    assert "8459" not in message

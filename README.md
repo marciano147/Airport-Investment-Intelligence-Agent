@@ -70,18 +70,33 @@ make setup
 Edit `.env`:
 
 ```bash
+LLM_PROVIDER=groq
+LLM_MAX_TOKENS=1200
+LLM_TIMEOUT_SECONDS=45
+
 GROQ_API_KEY=gsk-your-key-here
 GROQ_MODEL=openai/gpt-oss-20b
 GROQ_REASONING_FORMAT=hidden
 GROQ_REASONING_EFFORT=low
-GROQ_MAX_TOKENS=1200
-GROQ_TIMEOUT_SECONDS=45
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
+
+# Optional OpenRouter fallback
+OPENROUTER_API_KEY=sk-or-your-key-here
+OPENROUTER_MODEL=liquid/lfm-2.5-2.6b:free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ```
 
 `GROQ_API_KEY` is required for both chat and voice transcription. The default chat model is `openai/gpt-oss-20b` because it supports tool calling and responds faster than the larger reasoning models in this app.
 
 Create a Groq key at `https://console.groq.com/keys`.
+
+To use OpenRouter for chat while keeping Groq Whisper for voice transcription:
+
+```bash
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-your-key-here
+OPENROUTER_MODEL=liquid/lfm-2.5-2.6b:free
+```
 
 Optional LangSmith tracing:
 

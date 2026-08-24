@@ -13,7 +13,12 @@ from typing import Any
 import streamlit as st
 from streamlit_mic_recorder import mic_recorder
 
-from agent import invoke_agent_messages, response_content
+from agent import (
+    format_agent_error,
+    invoke_agent_messages,
+    provider_diagnostics,
+    response_content,
+)
 from chat_store import (
     delete_conversation,
     export_messages_json,
@@ -80,6 +85,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_response" not in st.session_state:
     st.session_state.last_response = None
+if "last_request_diagnostics" not in st.session_state:
+    st.session_state.last_request_diagnostics = None
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
 if "last_audio_hash" not in st.session_state:
@@ -88,6 +95,8 @@ if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 if "replay_next" not in st.session_state:
     st.session_state.replay_next = False
+if "replay_full_history" not in st.session_state:
+    st.session_state.replay_full_history = True
 if "voice_input_version" not in st.session_state:
     st.session_state.voice_input_version = 0
 if "voice_status" not in st.session_state:
@@ -103,6 +112,7 @@ def _start_new_conversation() -> None:
     st.session_state.thread_id = f"airport-agent-{uuid.uuid4()}"
     st.session_state.messages = []
     st.session_state.last_response = None
+    st.session_state.last_request_diagnostics = None
     st.session_state.last_audio_hash = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = False
@@ -127,6 +137,7 @@ def _load_conversation(thread_id: str) -> None:
     st.session_state.thread_id = thread_id
     st.session_state.messages = load_messages(thread_id)
     st.session_state.last_response = None
+    st.session_state.last_request_diagnostics = None
     st.session_state.last_audio_hash = None
     st.session_state.pending_prompt = None
     st.session_state.replay_next = True
@@ -289,6 +300,14 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Debug / Monitoring")
+    st.session_state.replay_full_history = st.checkbox(
+        "Replay full saved chat history",
+        value=st.session_state.replay_full_history,
+        help=(
+            "Use full saved history after loading an old chat. Turn off for faster "
+            "requests or small free-model token limits."
+        ),
+    )
     show_raw = st.checkbox("Show debug info")
     show_trace = st.checkbox("Show LangSmith setup")
     st.caption("Enable LangSmith for full traces.")
@@ -303,6 +322,9 @@ with st.sidebar:
     if show_raw and st.session_state.last_response:
         st.caption(f"Thread: {st.session_state.thread_id}")
         st.json(st.session_state.last_response)
+    if show_raw and st.session_state.last_request_diagnostics:
+        st.caption("Last request diagnostics")
+        st.json(st.session_state.last_request_diagnostics)
     if show_raw and st.session_state.voice_debug_events:
         st.caption("Recent voice events")
         st.json(st.session_state.voice_debug_events)
@@ -336,13 +358,30 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                     # Restored SQLite conversations do not automatically exist
                     # inside LangGraph's in-memory checkpointer after a restart,
                     # so replay saved messages once before the next answer.
-                    input_messages = [
-                        {"role": message["role"], "content": message["content"]}
-                        for message in st.session_state.messages
-                    ]
+                    if st.session_state.replay_full_history:
+                        input_messages = [
+                            {"role": message["role"], "content": message["content"]}
+                            for message in st.session_state.messages
+                        ]
+                        replay_mode = "full_saved_history"
+                    else:
+                        input_messages = [latest_user_message]
+                        replay_mode = "latest_turn_after_restore"
                     st.session_state.replay_next = False
                 else:
                     input_messages = [latest_user_message]
+                    replay_mode = "latest_turn_with_memory"
+                st.session_state.last_request_diagnostics = provider_diagnostics(
+                    message_count=len(input_messages),
+                    replay_mode=replay_mode,
+                )
+                logger.info(
+                    "agent_request provider=%s model=%s messages=%s replay_mode=%s",
+                    st.session_state.last_request_diagnostics["provider"],
+                    st.session_state.last_request_diagnostics["model"],
+                    len(input_messages),
+                    replay_mode,
+                )
                 response = invoke_agent_messages(
                     input_messages,
                     thread_id=st.session_state.thread_id,
@@ -359,8 +398,8 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                         st.json(st.session_state.last_response)
             except Exception as exc:
                 logger.exception("Agent invocation failed")
-                content = f"Error: {exc}"
-                st.session_state.last_response = {"error": str(exc)}
+                content = format_agent_error(exc)
+                st.session_state.last_response = {"error": content}
 
         st.markdown(content)
         _append_and_save("assistant", content)
