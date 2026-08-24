@@ -37,7 +37,7 @@ Edit `.env`:
 
 ```bash
 GROQ_API_KEY=gsk-your-key-here
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-20b
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 ```
 

@@ -23,7 +23,7 @@ from tools import (
 
 load_dotenv()
 
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 CHECKPOINTER = MemorySaver()
 AGENT_TOOLS = [
     get_airport_info,

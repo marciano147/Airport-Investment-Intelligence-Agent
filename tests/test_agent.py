@@ -15,7 +15,7 @@ def test_agent_uses_memory_checkpointer():
 
 
 def test_agent_defaults_to_groq_model():
-    assert agent.MODEL == "llama-3.3-70b-versatile"
+    assert agent.MODEL == "openai/gpt-oss-20b"
 
 
 def test_get_agent_requires_groq_key(monkeypatch):
