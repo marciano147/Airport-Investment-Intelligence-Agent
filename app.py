@@ -49,6 +49,26 @@ st.set_page_config(
 )
 st.title("Airport Investment Intelligence Agent")
 st.caption("Identify promising US airports for terminal and capacity modernization. Powered by Groq.")
+st.markdown(
+    """
+    <style>
+    div[class*="st-key-delete-"] button {
+        color: rgba(185, 28, 28, 0.62);
+        border-color: rgba(185, 28, 28, 0.22);
+        background: rgba(185, 28, 28, 0.04);
+    }
+    div[class*="st-key-delete-"] button:hover {
+        color: rgb(185, 28, 28);
+        border-color: rgba(185, 28, 28, 0.55);
+        background: rgba(185, 28, 28, 0.09);
+    }
+    div[class*="st-key-delete-"] button:focus {
+        box-shadow: 0 0 0 0.12rem rgba(185, 28, 28, 0.24);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 init_store()
 
@@ -229,7 +249,6 @@ with st.sidebar:
                 if st.button(
                     "🗑",
                     key=f"delete-{conversation['thread_id']}",
-                    help=f"Delete: {title}",
                 ):
                     _delete_saved_conversation(conversation["thread_id"])
                     st.rerun()

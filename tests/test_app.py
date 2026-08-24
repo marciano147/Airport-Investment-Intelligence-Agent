@@ -45,5 +45,8 @@ def test_chat_history_has_delete_control():
     assert "delete_conversation" in source
     assert "st.columns([0.84, 0.16]" in source
     assert '"🗑"' in source
+    assert "st-key-delete-" in source
+    assert "rgba(185, 28, 28, 0.62)" in source
+    assert 'help=f"Delete: {title}"' not in source
     assert '"Delete saved chat"' not in source
     assert '"Delete Selected Chat"' not in source
