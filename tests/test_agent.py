@@ -7,6 +7,7 @@ def test_agent_tools_include_comparison_and_long_haul():
 
     assert "compare_airports" in tool_names
     assert "get_long_haul_estimate" in tool_names
+    assert "get_unmet_demand" in tool_names
     assert "rank_airports_for_expansion" in tool_names
 
 
@@ -111,6 +112,7 @@ def test_run_agent_invokes_configured_thread(monkeypatch):
 
 def test_invoke_agent_messages_retries_rate_limits(monkeypatch):
     calls = {"count": 0, "sleeps": []}
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
 
     class FakeAgent:
         def invoke(self, payload, config):

@@ -22,6 +22,7 @@ from tools import (
     get_congestion,
     get_long_haul_estimate,
     get_passenger_metrics,
+    get_unmet_demand,
     rank_airports_for_expansion,
 )
 
@@ -66,6 +67,7 @@ AGENT_TOOLS = [
     rank_airports_for_expansion,
     compare_airports,
     get_long_haul_estimate,
+    get_unmet_demand,
 ]
 _AGENT: CompiledStateGraph | None = None
 _OPENROUTER_AGENT: CompiledStateGraph | None = None

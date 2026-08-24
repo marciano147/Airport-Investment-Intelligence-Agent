@@ -116,7 +116,7 @@ def test_expansion_candidates_falls_back_when_runway_count_is_zero(monkeypatch):
     candidate = expansion_candidates("test")[0]
 
     assert candidate["enplanements_per_runway"] == 1000.0
-    assert candidate["utilization"] == 92.0
+    assert candidate["utilization"] == 0.0
     clear_caches()
 
 

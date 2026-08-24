@@ -8,6 +8,7 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 
 - Rank US airports by expansion opportunity using a fixed scoring formula.
 - Compare any two airports on congestion, passenger growth, utilization, and composite score.
+- Estimate unmet-demand pressure as a labeled proxy index, not unserved flights.
 - Parse live FAA NAS Status traffic-management programs, then use calibrated congestion baselines when no active program exists.
 - Estimate long-haul or international share with a labeled proxy table.
 - Answer follow-up questions through LangGraph conversation memory.
@@ -28,19 +29,22 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 
 ## How it works
 
-The LLM does not rank airports. It routes the question, calls tools, and explains a Python score built from local CSV caches plus an optional live FAA NAS status lookup.
+The LLM decides which calculation to run. Python decides the numerical answer.
 
 ```mermaid
-flowchart LR
-  U[User text or voice] --> S[Streamlit]
-  S --> W[Groq Whisper]
-  W --> S
+flowchart TB
+  Q[Analyst question] --> S[Streamlit UI]
   S --> A[LangGraph agent]
-  A --> L[Groq or OpenRouter]
-  A --> T[Python tools]
-  T --> C[data/*.csv cache]
-  T --> N[FAA NAS live]
-  T --> P[Fixed scoring formula]
+  A --> R[Ranking tool]
+  A --> C[Comparison tool]
+  A --> D[Unmet-demand tool]
+  R --> P[Deterministic scoring]
+  C --> P
+  D --> P
+  P --> F[FAA passengers]
+  P --> W[Runway data]
+  P --> N[FAA live NAS]
+  P --> B[Congestion baselines CSV]
   P --> A
   A --> S
 ```
@@ -138,6 +142,7 @@ The repo includes demo-ready CSV caches:
 - `data/airports.csv`: US scheduled-service airport metadata from OurAirports.
 - `data/runways.csv`: runway counts and longest-runway fields derived from OurAirports.
 - `data/enplanements.csv`: FAA 2024 commercial-service passenger boarding cache.
+- `data/congestion_baselines.csv`: labeled prototype structural congestion proxies.
 
 Airport and runway caches can refresh automatically if missing. The enplanement cache is checked in for review stability and should be refreshed manually when FAA workbook formats or reporting years change. See `data/README.md` for the cache inventory.
 

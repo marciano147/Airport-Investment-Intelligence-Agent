@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import csv
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 
@@ -12,40 +15,21 @@ WEIGHTS = {
     "secondary": 0.10,
 }
 
-# Deterministic fallback when FAA's live feed has no active delay event. Without
-# this, the highest-weight component can collapse to zero for every airport.
-BASELINE_CONGESTION = {
-    "ATL": 75,
-    "ORD": 78,
-    "LAX": 72,
-    "DFW": 70,
-    "JFK": 80,
-    "EWR": 82,
-    "LGA": 85,
-    "SFO": 70,
-    "BOS": 68,
-    "MIA": 65,
-    "CLT": 60,
-    "DEN": 55,
-    "PHX": 50,
-    "IAH": 58,
-    "SEA": 55,
-    "MSP": 52,
-    "DTW": 55,
-    "PHL": 62,
-    "BWI": 45,
-    "MDW": 50,
-    "IAD": 58,
-    "FLL": 48,
-    "MCO": 45,
-    "LAS": 50,
-    "SAN": 40,
-    "SNA": 35,
-    "PDX": 38,
-    "AUS": 42,
-    "BNA": 40,
-    "DAL": 45,
+UNMET_DEMAND_WEIGHTS = {
+    "congestion": 0.40,
+    "utilization": 0.35,
+    "growth": 0.25,
 }
+
+# Absolute passengers-per-runway range. SFO keeps the same utilization score
+# whether it is ranked nationally, by state, or compared with one peer.
+UTILIZATION_MIN_PER_RUNWAY = 1_000_000
+UTILIZATION_MAX_PER_RUNWAY = 8_000_000
+
+DEFAULT_STRUCTURAL_BASELINE = 35.0
+DEFAULT_BASELINE_CONFIDENCE = "low"
+DEFAULT_BASELINE_NOTE = "default prototype structural congestion proxy"
+CONGESTION_BASELINES_PATH = Path(__file__).resolve().parent / "data" / "congestion_baselines.csv"
 
 
 def normalize(value: float, min_val: float = 0, max_val: float = 100) -> float:
@@ -69,18 +53,85 @@ def _number_or_default(value: Any, default: float) -> float:
         return default
 
 
+@lru_cache(maxsize=1)
+def load_congestion_baselines() -> dict[str, dict[str, Any]]:
+    """Load labeled prototype congestion baselines from CSV."""
+    baselines: dict[str, dict[str, Any]] = {}
+    if not CONGESTION_BASELINES_PATH.exists():
+        return baselines
+    with CONGESTION_BASELINES_PATH.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            iata = (row.get("iata") or "").strip().upper()
+            if not iata:
+                continue
+            baselines[iata] = {
+                "baseline": _number_or_default(row.get("baseline"), DEFAULT_STRUCTURAL_BASELINE),
+                "confidence": (row.get("confidence") or DEFAULT_BASELINE_CONFIDENCE).strip(),
+                "note": (row.get("note") or DEFAULT_BASELINE_NOTE).strip(),
+            }
+    return baselines
+
+
+def structural_congestion_baseline(iata: str = "") -> dict[str, Any]:
+    """Return the labeled structural congestion proxy for an IATA code."""
+    record = load_congestion_baselines().get(str(iata or "").strip().upper())
+    if not record:
+        return {
+            "baseline": DEFAULT_STRUCTURAL_BASELINE,
+            "confidence": DEFAULT_BASELINE_CONFIDENCE,
+            "note": DEFAULT_BASELINE_NOTE,
+        }
+    return dict(record)
+
+
+def utilization_score(enplanements_per_runway: Any) -> float:
+    """Score runway pressure on a fixed passengers-per-runway scale."""
+    return round(
+        normalize(
+            _number_or_default(enplanements_per_runway, 0),
+            UTILIZATION_MIN_PER_RUNWAY,
+            UTILIZATION_MAX_PER_RUNWAY,
+        ),
+        1,
+    )
+
+
 def get_congestion_score(delay_minutes: Any, iata: str = "") -> float:
     """Score congestion from live FAA delay plus a deterministic hub baseline."""
-    baseline = BASELINE_CONGESTION.get(iata.strip().upper(), 35)
-    delay = _number_or_default(delay_minutes, 0)
-    if delay <= 0:
-        return float(baseline)
+    return congestion_breakdown(delay_minutes, iata)["congestion_score"]
 
-    # Live delays should matter, but a quiet current feed should not erase known
-    # structural congestion at major hubs.
-    live_score = normalize(delay, 0, 45)
-    blended = (baseline * 0.55) + (live_score * 0.45)
-    return max(float(baseline), live_score, blended)
+
+def congestion_breakdown(delay_minutes: Any, iata: str = "") -> dict[str, Any]:
+    """Separate live FAA delay from the structural congestion proxy."""
+    normalized_iata = str(iata or "").strip().upper()
+    record = structural_congestion_baseline(normalized_iata)
+    baseline = float(record["baseline"])
+    delay = _number_or_default(delay_minutes, 0)
+    live_score = round(normalize(delay, 0, 45), 1) if delay > 0 else None
+
+    if delay <= 0:
+        final = baseline
+        source = "prototype structural baseline"
+        live_program = "none"
+        confidence = record["confidence"]
+    else:
+        blended = (baseline * 0.55) + (live_score * 0.45)
+        final = max(baseline, live_score, blended)
+        source = "live FAA NAS program blended with structural baseline"
+        live_program = f"{delay:g} min"
+        confidence = "medium"
+
+    return {
+        "iata": normalized_iata,
+        "structural_baseline": round(baseline, 1),
+        "live_delay_minutes": delay,
+        "live_congestion_score": live_score,
+        "congestion_score": round(float(final), 1),
+        "source": source,
+        "confidence": confidence,
+        "live_faa_program": live_program,
+        "note": record["note"],
+    }
 
 
 def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
@@ -89,7 +140,7 @@ def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
     Expected values:
     - `delay_minutes` or `delay_score`
     - `yoy_growth` as percentage points, for example 8.5 for 8.5%
-    - `utilization` on a 0-100 scale
+    - `enplanements_per_runway` for absolute utilization, or `utilization` 0-100
     - `secondary` on a 0-100 scale
     """
     iata = str(airport.get("iata", "") or "")
@@ -102,8 +153,10 @@ def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
     growth_pct = _number_or_default(airport.get("yoy_growth"), 3.0)
     growth = normalize(growth_pct, -5, 12)
 
-    util = _number_or_default(airport.get("utilization"), 65)
-    utilization = normalize(util, 40, 95)
+    if airport.get("enplanements_per_runway") is not None:
+        utilization = utilization_score(airport.get("enplanements_per_runway"))
+    else:
+        utilization = normalize(_number_or_default(airport.get("utilization"), 50), 0, 100)
 
     secondary_input = _number_or_default(airport.get("secondary"), 50)
     secondary = normalize(secondary_input, 0, 100)
@@ -123,6 +176,41 @@ def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
         "growth": round(growth, 1),
         "utilization": round(utilization, 1),
         "secondary": round(secondary, 1),
+    }
+
+
+def classify_unmet_demand(pressure_score: float) -> str:
+    """Label the unmet-demand pressure index without claiming unserved flights."""
+    if pressure_score >= 70:
+        return "High"
+    if pressure_score >= 50:
+        return "Moderate"
+    return "Limited"
+
+
+def calculate_unmet_demand_pressure(airport: dict[str, Any]) -> dict[str, Any]:
+    """Return a proxy unmet-demand pressure index from congestion, utilization, and growth."""
+    scores = calculate_scores(airport)
+    pressure = (
+        scores["congestion"] * UNMET_DEMAND_WEIGHTS["congestion"]
+        + scores["utilization"] * UNMET_DEMAND_WEIGHTS["utilization"]
+        + scores["growth"] * UNMET_DEMAND_WEIGHTS["growth"]
+    )
+    pressure_score = round(pressure, 1)
+    return {
+        "pressure_score": pressure_score,
+        "classification": classify_unmet_demand(pressure_score),
+        "drivers": {
+            "congestion": scores["congestion"],
+            "utilization": scores["utilization"],
+            "growth": scores["growth"],
+        },
+        "is_proxy": True,
+        "definition": (
+            "Unmet demand pressure index. It is not a count of unserved flights "
+            "or true origin-destination booking demand."
+        ),
+        "weights": dict(UNMET_DEMAND_WEIGHTS),
     }
 
 

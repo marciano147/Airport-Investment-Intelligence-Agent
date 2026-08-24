@@ -9,12 +9,14 @@ The agent must answer ranking, comparison, congestion, growth, long-haul, and un
 ## Architecture
 
 ```text
-User question
-  -> Streamlit chat UI
-  -> LangGraph ReAct agent
-  -> Tool calls for data and scoring
-  -> Deterministic Python result
-  -> LLM explanation with assumptions
+Analyst question
+  -> Streamlit UI
+  -> LangGraph agent (intent + routing)
+  -> Ranking, comparison, or unmet-demand tool
+  -> Deterministic scoring
+  -> Local passenger/runway caches + labeled congestion baselines + live FAA NAS
+  -> Structured result
+  -> LLM explanation
 ```
 
 Main files:
@@ -22,9 +24,9 @@ Main files:
 - `app.py`: Streamlit chat UI, example prompts, new-conversation control, and debug panel.
 - `agent.py`: LangGraph ReAct agent, Groq model setup, tool registry, and `MemorySaver` checkpointing.
 - `chat_store.py`: SQLite conversation list, message persistence, and JSON export.
-- `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, and long-haul estimates.
+- `tools.py`: LangChain tools for airport facts, congestion, passenger metrics, rankings, comparisons, long-haul proxies, and unmet-demand pressure.
 - `data_loader.py`: public data caches, region/state handling, runway counts, and expansion candidate assembly.
-- `scoring.py`: deterministic score calculation and ranking.
+- `scoring.py`: deterministic score calculation, absolute utilization, congestion provenance, and unmet-demand pressure.
 - `long_haul.py`: static long-haul and international share proxy table.
 - `voice_utils.py`: Groq Whisper transcription helper for recorded questions.
 - `context/*.md`: Hermes-style prompt context for role, tools, scoring, assumptions, and answer style.
@@ -50,20 +52,23 @@ Composite =
 
 All component scores are normalized to 0-100 before weighting.
 
-- Congestion Score: live FAA NAS Status traffic-management programs first, deterministic baseline tiers second. Ground delay programs use reported average delay minutes, arrival/departure delays use the midpoint of the reported range, and ground stops or closures use a high-pressure proxy. This prevents the highest-weight signal from collapsing to zero when the current FAA feed has no active program.
+- Congestion Score: live FAA NAS Status traffic-management programs first, labeled structural baselines second (`data/congestion_baselines.csv`). Ground delay programs use reported average delay minutes, arrival/departure delays use the midpoint of the reported range, and ground stops or closures use a high-pressure proxy. Answers report current FAA delay, the structural baseline, and the final congestion score separately.
 - Passenger Growth Score: year-over-year enplanement growth normalized from -5% to +12%.
-- Utilization Score: passengers per runway, scaled relative to the selected candidate set and capped below full saturation before final normalization.
-- Secondary Score: strategic proxy based on airport scale, long-haul route-mix estimate, and runway pressure. Defaults are explicit when richer data is unavailable.
+- Utilization Score: passengers per runway on a fixed 1,000,000 to 8,000,000 scale. The same airport keeps the same utilization score in national rankings, regional rankings, and pairwise comparisons.
+- Secondary Score: strategic proxy based on airport scale, long-haul share proxy, and runway pressure. Defaults are explicit when richer data is unavailable.
+- Unmet Demand Pressure: a dedicated proxy index of Congestion 40% + Utilization 35% + Growth 25%. It is not unserved flights or booking demand.
 
 The formula lives in `scoring.py`. Ranking order comes from pure Python, not from model preference.
 
 ## Recent Scoring Improvements
 
-Utilization was upgraded from a static placeholder to a runway-based metric using OurAirports runway counts and FAA enplanements. This better reflects capacity pressure as passengers per runway.
+Utilization was upgraded from a peer-relative placeholder to an absolute passengers-per-runway score on a fixed 1M-8M scale. SFO has the same utilization whether it is ranked nationally, ranked in California, or compared with SNA.
 
-Congestion now parses live FAA NAS Status programs for real delay minutes where available. If no program is active for an airport, deterministic hub baselines keep chronic congestion pressure from being treated as zero.
+Congestion now parses live FAA NAS Status programs for real delay minutes where available. If no program is active for an airport, labeled prototype structural baselines in `data/congestion_baselines.csv` keep chronic congestion pressure from being treated as zero. Tool output reports live delay, baseline, source, and confidence separately.
 
-Secondary incorporates a long-haul and international share proxy, airport scale, and runway pressure to capture strategic terminal value for international and long-distance traffic.
+Unmet demand is a dedicated pressure-index tool, not a narrative assembled from other KPIs. It is explicitly a proxy.
+
+Secondary incorporates a long-haul share proxy, airport scale, and runway pressure to capture strategic terminal value for international and long-distance traffic.
 
 ## Data Sources
 
@@ -72,7 +77,7 @@ Secondary incorporates a long-haul and international share proxy, airport scale,
 | OurAirports | Airport metadata, IATA coverage, runway data | Cached CSVs in `data/` |
 | FAA passenger boarding data | Enplanements and YoY growth | Cached 2024 commercial-service CSV |
 | FAA NAS airport status | Current ground delays, ground stops, closures, and arrival/departure delays | Live XML parse plus deterministic hub baseline |
-| Static proxy tables | Long-haul, international share, and baseline congestion | Approximate, labeled in tool output and design notes |
+| Static proxy tables | Long-haul share and baseline congestion | Approximate, labeled in CSV/tool output |
 | Groq Whisper | Voice question transcription | Optional Streamlit microphone flow |
 
 ## Where AI Is Used
@@ -88,7 +93,7 @@ The LLM is used for:
 
 Deterministic code is used for:
 
-- Numerical scoring.
+- Numerical scoring, including unmet-demand pressure.
 - Airport ranking order.
 - Side-by-side comparison tables.
 - Data loading and cache assembly.
@@ -108,16 +113,16 @@ Deterministic code is used for:
 ## Trade-Offs
 
 - Cached FAA enplanement data keeps the demo stable, but it needs refresh work for future years.
-- FAA NAS Status is a current traffic-management-program signal, not a full historical congestion model. It often returns no active program even for busy airports. Baseline congestion tiers are a deterministic fallback for one-day scope, not a substitute for historical OPSNET, ASPM, or BTS ASQP delay data.
+- FAA NAS Status is a current traffic-management-program signal, not a full historical congestion model. It often returns no active program even for busy airports. Baseline congestion values are labeled prototype heuristics in `data/congestion_baselines.csv`, not a substitute for historical OPSNET, ASPM, or BTS ASQP delay data.
 - Long-haul share uses a transparent proxy because free route-level schedule data is limited.
-- Utilization is based on passengers per runway. A production model should include BTS T-100 seats/departures, declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
+- Utilization is based on passengers per runway on a fixed 1M-8M scale. A production model should include BTS T-100 seats/departures, declared airport capacity, peak-hour operations, gates, terminal square footage, and airline constraints.
 - Voice input uses `streamlit-mic-recorder` instead of native `st.audio_input`, which can error when MediaRecorder stops. Stopping a clip auto-sends it through Whisper. This is still submit-after-recording, not a streaming voice assistant.
 - The score is simple by design so reviewers can reproduce and challenge it.
 
 ## Assumptions and Limitations
 
 - Passenger data has reporting lag.
-- "Unmet demand" means a proxy based on congestion, growth, and utilization, not true origin-destination booking demand.
+- "Unmet demand" is a pressure-index proxy from congestion, utilization, and growth, not true origin-destination booking demand or unserved flights.
 - Scope is limited to US airports with IATA codes and public data coverage.
 - This is analyst decision support, not a construction-cost model, traffic forecast, or investment committee memo.
 
@@ -128,5 +133,5 @@ Deterministic code is used for:
 - Add OpenSky ADS-B density as an optional live operational-pressure signal.
 - Add state and metro-area airport discovery beyond the current curated region map.
 - Add a repeatable data refresh script for FAA enplanements.
-- Add an evaluation set for example questions and expected tool calls.
+- Add an evaluation set for example questions and expected tool calls. The four original assignment examples now have deterministic tool tests in `tests/test_assignment_examples.py`.
 - Persist conversation state outside process memory for deployed use.

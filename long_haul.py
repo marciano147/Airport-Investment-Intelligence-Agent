@@ -44,24 +44,28 @@ def long_haul_estimate(iata: str) -> dict[str, Any]:
     if not proxy:
         return {
             "iata": normalized,
-            "long_haul_pct_estimate": None,
+            "long_haul_share_proxy_pct": None,
+            "label": "Estimated long-haul share proxy",
             "definition": "Approximate share of international plus very long domestic flights",
             "confidence": "none",
+            "is_proxy": True,
             "note": (
-                "No specific proxy is available for this airport. Long-haul share "
-                "requires route-level schedule data; use a generic 8-15% assumption "
-                "for many secondary airports only if the analysis needs a placeholder."
+                "No specific proxy is available for this airport. This is not calculated "
+                "from current route-level schedules. Use a generic 8-15% assumption for "
+                "many secondary airports only if the analysis needs a placeholder."
             ),
         }
 
     return {
         "iata": normalized,
-        "long_haul_pct_estimate": proxy["estimate"],
+        "long_haul_share_proxy_pct": proxy["estimate"],
+        "label": "Estimated long-haul share proxy",
         "definition": "Approximate share of international plus very long domestic flights",
         "confidence": proxy["confidence"],
+        "is_proxy": True,
         "note": (
-            "This is a static proxy based on known airport traffic patterns, not live "
-            "schedule data. A production-grade estimate should use route-level BTS T-100, "
-            "OAG, Cirium, or similar schedule data."
+            "Estimated long-haul share proxy; not calculated from current route-level "
+            "schedules. A production-grade estimate should use BTS T-100, OAG, Cirium, "
+            "or similar schedule data."
         ),
     }

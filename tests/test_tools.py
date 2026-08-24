@@ -4,6 +4,7 @@ from tools import (
     get_congestion,
     get_long_haul_estimate,
     get_passenger_metrics,
+    get_unmet_demand,
     rank_airports_for_expansion,
 )
 
@@ -15,8 +16,10 @@ def test_compare_airports_returns_side_by_side_scores(monkeypatch):
 
     assert "Comparison: LAX vs SNA" in result
     assert "Composite score" in result
-    assert "Long-haul proxy" in result
-    assert "Congestion score | 72.0 | 35.0" in result
+    assert "Estimated long-haul share proxy" in result
+    assert "Structural congestion baseline | 72.0 | 35.0" in result
+    assert "Final congestion score | 72.0 | 35.0" in result
+    assert "Unmet-demand pressure (proxy) | 63.8 (Moderate) | 22.4 (Limited)" in result
     assert "Assumptions & Limitations" in result
 
 
@@ -73,9 +76,10 @@ def test_long_haul_estimate_known_and_unknown_airports():
     known = get_long_haul_estimate.invoke({"iata": "ANC"})
     unknown = get_long_haul_estimate.invoke({"iata": "ZZZ"})
 
-    assert known["long_haul_pct_estimate"] == 35
+    assert known["long_haul_share_proxy_pct"] == 35
     assert known["confidence"] == "medium"
-    assert unknown["long_haul_pct_estimate"] is None
+    assert known["is_proxy"] is True
+    assert unknown["long_haul_share_proxy_pct"] is None
     assert unknown["confidence"] == "none"
 
 
@@ -99,7 +103,7 @@ def test_rank_tool_falls_back_to_baselines_when_nas_feed_fails(monkeypatch):
 
     assert "Ranking for region: US" in result
     assert "Composite" in result
-    assert "deterministic hub baselines" in result
+    assert "structural baselines" in result
 
 
 def test_rank_tool_returns_message_for_empty_candidate_set(monkeypatch):
@@ -109,3 +113,12 @@ def test_rank_tool_returns_message_for_empty_candidate_set(monkeypatch):
     result = rank_airports_for_expansion.invoke({"region": "ZZ", "top_n": 3})
 
     assert "No candidate airports found" in result
+
+
+def test_unmet_demand_tool_rejects_unknown_iata(monkeypatch):
+    monkeypatch.setattr("tools._status_delay_scores", lambda: {})
+
+    result = get_unmet_demand.invoke({"iata": "ZZZ"})
+
+    assert "error" in result
+    assert "No cached airport" in result["error"]

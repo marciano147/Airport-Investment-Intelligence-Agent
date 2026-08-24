@@ -16,14 +16,16 @@ from data_loader import (
     get_faa_status,
     metrics_by_iata,
     secondary_proxy_score,
-    utilization_proxy_score,
 )
 from long_haul import long_haul_estimate
 from scoring import (
     calculate_scores,
+    calculate_unmet_demand_pressure,
+    congestion_breakdown,
     format_ranking,
     get_congestion_score,
     rank_airports,
+    utilization_score,
 )
 
 
@@ -65,16 +67,11 @@ def _airport_score_input(
     return {**candidate, **delay}
 
 
-def _apply_pair_proxies(left: dict[str, Any], right: dict[str, Any]) -> None:
-    """Apply the same utilization and secondary semantics used by rankings."""
-    max_per_runway = max(
-        float(left["enplanements_per_runway"]),
-        float(right["enplanements_per_runway"]),
-        1.0,
-    )
-    for airport in (left, right):
-        airport["utilization"] = utilization_proxy_score(
-            float(airport["enplanements_per_runway"]), max_per_runway
+def _apply_score_proxies(*airports: dict[str, Any]) -> None:
+    """Apply absolute utilization and secondary proxies used by rankings."""
+    for airport in airports:
+        airport["utilization"] = utilization_score(
+            float(airport["enplanements_per_runway"])
         )
         airport["secondary"] = secondary_proxy_score(airport)
 
@@ -120,15 +117,20 @@ def get_congestion(iata: str) -> dict[str, Any]:
     try:
         normalized = iata.strip().upper()
         live_status = get_faa_status(normalized)
+        breakdown = congestion_breakdown(
+            live_status.get("delay_minutes", 0), normalized
+        )
         _log_tool_result("get_congestion", started, "ok")
         return {
             "iata": normalized,
             **live_status,
-            "congestion_score": round(
-                get_congestion_score(live_status.get("delay_minutes", 0), normalized),
-                1,
-            ),
-            "source": FAA_STATUS_URL,
+            "congestion_score": breakdown["congestion_score"],
+            "structural_baseline": breakdown["structural_baseline"],
+            "source": breakdown["source"],
+            "confidence": breakdown["confidence"],
+            "live_faa_program": breakdown["live_faa_program"],
+            "baseline_note": breakdown["note"],
+            "status_source": FAA_STATUS_URL,
         }
     except Exception as exc:
         logger.exception("get_congestion failed")
@@ -137,6 +139,10 @@ def get_congestion(iata: str) -> dict[str, Any]:
             "iata": iata.strip().upper(),
             "delay_minutes": 0,
             "congestion_score": round(get_congestion_score(0, iata), 1),
+            "structural_baseline": congestion_breakdown(0, iata)["structural_baseline"],
+            "source": "prototype structural baseline",
+            "confidence": "low",
+            "live_faa_program": "none",
             "error": str(exc),
             "suggestion": "FAA NAS Status feed may be unavailable. Retry or inspect logs.",
         }
@@ -177,9 +183,13 @@ def compare_airports(iata1: str, iata2: str) -> str:
             _log_tool_result("compare_airports", started, "right_error")
             return f"Error for {right_iata}: {right['error']}"
 
-        _apply_pair_proxies(left, right)
+        _apply_score_proxies(left, right)
         left_scores = calculate_scores(left)
         right_scores = calculate_scores(right)
+        left_congestion = congestion_breakdown(left.get("delay_minutes", 0), left_iata)
+        right_congestion = congestion_breakdown(right.get("delay_minutes", 0), right_iata)
+        left_demand = calculate_unmet_demand_pressure(left)
+        right_demand = calculate_unmet_demand_pressure(right)
         long_left = long_haul_estimate(left_iata)
         long_right = long_haul_estimate(right_iata)
 
@@ -192,9 +202,19 @@ def compare_airports(iata1: str, iata2: str) -> str:
                 "Airport", left.get("name", left_iata), right.get("name", right_iata)
             ),
             _comparison_row(
-                "Delay minutes",
-                left.get("delay_minutes", "N/A"),
-                right.get("delay_minutes", "N/A"),
+                "Current FAA delay",
+                _delay_display(left.get("delay_minutes", 0)),
+                _delay_display(right.get("delay_minutes", 0)),
+            ),
+            _comparison_row(
+                "Structural congestion baseline",
+                left_congestion["structural_baseline"],
+                right_congestion["structural_baseline"],
+            ),
+            _comparison_row(
+                "Final congestion score",
+                left_scores["congestion"],
+                right_scores["congestion"],
             ),
             _comparison_row(
                 "2024 enplanements",
@@ -215,19 +235,31 @@ def compare_airports(iata1: str, iata2: str) -> str:
                 f"{right['enplanements_per_runway']:,.1f}",
             ),
             _comparison_row(
-                "Long-haul proxy", _long_haul_value(long_left), _long_haul_value(long_right)
+                "Estimated long-haul share proxy",
+                _long_haul_value(long_left),
+                _long_haul_value(long_right),
             ),
             _comparison_row("Composite score", left_scores["composite"], right_scores["composite"]),
-            _comparison_row("Congestion score", left_scores["congestion"], right_scores["congestion"]),
             _comparison_row("Growth score", left_scores["growth"], right_scores["growth"]),
             _comparison_row("Utilization score", left_scores["utilization"], right_scores["utilization"]),
             _comparison_row("Secondary score", left_scores["secondary"], right_scores["secondary"]),
+            _comparison_row(
+                "Unmet-demand pressure (proxy)",
+                _pressure_display(left_demand),
+                _pressure_display(right_demand),
+            ),
             "",
             "Higher composite score indicates stronger relative pressure/opportunity under the defined KPI weights.",
             "",
-            "Assumptions & Limitations: Long-haul share is a static proxy when shown. "
-            "Utilization in direct comparisons is peer-relative between the selected "
-            "airports; regional rankings use peer-relative enplanements per runway.",
+            "Assumptions & Limitations: Estimated long-haul share is a static proxy, "
+            "not current route-level schedule data. "
+            "Utilization is passengers per runway on a fixed 1M-8M scale, so an "
+            "airport keeps the same utilization score in rankings and pairwise comparisons. "
+            "Congestion shows live FAA delay separately from the structural baseline. "
+            "Structural baselines are labeled prototype heuristics in "
+            "data/congestion_baselines.csv, not FAA-published scores. "
+            "Unmet-demand pressure is a proxy index from congestion, utilization, and growth; "
+            "do not invent a different classification.",
         ]
         _log_tool_result("compare_airports", started, "ok")
         return "\n".join(lines)
@@ -237,11 +269,21 @@ def compare_airports(iata1: str, iata2: str) -> str:
         return f"Error comparing airports: {exc}"
 
 
+def _delay_display(delay_minutes: Any) -> str:
+    delay = float(delay_minutes or 0)
+    return "None" if delay <= 0 else f"{delay:g} min"
+
+
+def _pressure_display(pressure: dict[str, Any]) -> str:
+    return f"{pressure['pressure_score']} ({pressure['classification']})"
+
+
 def _long_haul_value(estimate: dict[str, Any]) -> str:
-    value = estimate.get("long_haul_pct_estimate")
+    value = estimate.get("long_haul_share_proxy_pct")
     if value is None:
         return "Unknown"
-    return f"{value}% ({estimate.get('confidence', 'unknown')})"
+    confidence = str(estimate.get("confidence", "unknown")).capitalize()
+    return f"~{value}% (confidence: {confidence})"
 
 
 @tool
@@ -256,6 +298,44 @@ def get_long_haul_estimate(iata: str) -> dict[str, Any]:
         logger.exception("get_long_haul_estimate failed")
         _log_tool_result("get_long_haul_estimate", started, "error")
         return {"error": str(exc)}
+
+
+@tool
+def get_unmet_demand(iata: str) -> dict[str, Any]:
+    """Return a proxy unmet-demand pressure index for an IATA code.
+
+    This is not a count of unserved flights. It combines congestion, utilization,
+    and passenger growth into a 0-100 pressure score.
+    """
+    started = time.perf_counter()
+    try:
+        normalized = iata.strip().upper()
+        live_scores = _status_delay_scores()
+        airport = _airport_score_input(normalized, live_scores)
+        if "error" in airport:
+            _log_tool_result("get_unmet_demand", started, "not_found")
+            return airport
+
+        _apply_score_proxies(airport)
+        pressure = calculate_unmet_demand_pressure(airport)
+        breakdown = congestion_breakdown(airport.get("delay_minutes", 0), normalized)
+        _log_tool_result("get_unmet_demand", started, "ok")
+        return {
+            "iata": normalized,
+            "name": airport.get("name", normalized),
+            **pressure,
+            "congestion_provenance": {
+                "current_faa_delay": _delay_display(airport.get("delay_minutes", 0)),
+                "structural_baseline": breakdown["structural_baseline"],
+                "final_congestion_score": breakdown["congestion_score"],
+                "source": breakdown["source"],
+                "confidence": breakdown["confidence"],
+            },
+        }
+    except Exception as extra:
+        logger.exception("get_unmet_demand failed")
+        _log_tool_result("get_unmet_demand", started, "error")
+        return {"error": str(extra), "is_proxy": True}
 
 
 @tool
@@ -288,11 +368,12 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
             "Scores use the mandatory weighted formula: Congestion 35%, Growth 30%, "
             "Utilization 25%, Secondary 10%.\n\n"
             "Assumptions & Limitations: FAA delay status is live where available; "
-            "active NAS programs use parsed delay minutes; otherwise congestion "
-            "uses deterministic hub baselines. "
+            "active NAS programs use parsed delay minutes blended with labeled "
+            "structural baselines in data/congestion_baselines.csv. "
             "Passenger metrics are cached from the FAA 2024 commercial-service workbook "
-            "and lag official reporting. Utilization uses passengers per runway. "
-            "Secondary blends long-haul proxy, airport scale, and runway pressure."
+            "and lag official reporting. Utilization uses passengers per runway on a "
+            "fixed 1M-8M scale. Secondary blends long-haul share proxy, airport scale, "
+            "and runway pressure."
         )
         _log_tool_result("rank_airports_for_expansion", started, "ok")
         return result

@@ -84,7 +84,7 @@ def check_tool_comparison() -> str:
     result = compare_airports.invoke({"iata1": "LAX", "iata2": "SNA"})
     _require_fragments(
         result,
-        ["Comparison: LAX vs SNA", "Composite score", "Long-haul proxy"],
+        ["Comparison: LAX vs SNA", "Composite score", "Estimated long-haul share proxy"],
     )
     return "LAX/SNA comparison includes KPIs and score breakdown"
 
@@ -94,9 +94,9 @@ def check_tool_long_haul() -> str:
 
     known = get_long_haul_estimate.invoke({"iata": "ANC"})
     unknown = get_long_haul_estimate.invoke({"iata": "ZZZ"})
-    if known.get("long_haul_pct_estimate") != 35:
+    if known.get("long_haul_share_proxy_pct") != 35:
         raise RuntimeError(f"unexpected ANC long-haul estimate: {known}")
-    if unknown.get("long_haul_pct_estimate") is not None:
+    if unknown.get("long_haul_share_proxy_pct") is not None:
         raise RuntimeError(f"unknown airport should not get estimate: {unknown}")
     return "known and unknown long-haul paths behave correctly"
 
