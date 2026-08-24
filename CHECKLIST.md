@@ -27,6 +27,7 @@
 - [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
 - [x] Add compute-layer caches and tool timing logs.
 - [x] Add persistent SQLite chat history and move voice input near the chat box.
+- [x] Recalibrate scoring with congestion baselines, capped runway utilization, and strategic secondary proxies.
 
 ## Verification
 
@@ -37,7 +38,9 @@
 ## Follow-Up Improvements
 
 - [ ] Automate FAA enplanement workbook refresh and schema validation.
-- [ ] Add BTS T-100 route or operations data for a stronger utilization signal.
+- [ ] Add BTS T-100 seats, departures, and load-factor data for stronger utilization and demand signals.
+- [ ] Add FAA OPSNET or ASPM historical delay data to replace congestion baseline tiers.
 - [ ] Replace static long-haul proxy with BTS T-100 or schedule data.
+- [ ] Add optional OpenSky ADS-B density for live operational pressure.
 - [ ] Add CI for pytest and import checks.
 - [ ] Add screenshots for the take-home review.

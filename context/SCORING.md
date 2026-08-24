@@ -9,10 +9,10 @@ Composite Score =
 All component scores must be normalized to 0-100 before weighting.
 
 Definitions:
-- Congestion: Based on FAA delay minutes, ground stops, closures, or active delay advisories.
-- Passenger Growth: Year-over-year enplanement percentage change.
-- Utilization: Passenger volume relative to runway count and regional peer airports.
-- Secondary: Strategic secondary-market opportunity and long-haul proxy context, defaulting only when unknown.
+- Congestion: Combines live FAA delay/advisory minutes with deterministic baseline tiers for major hubs when the live feed has no active delay.
+- Passenger Growth: Year-over-year enplanement percentage change, normalized against a -5% to +12% range.
+- Utilization: Passenger volume per runway relative to selected peer airports, capped below full saturation.
+- Secondary: Strategic context from airport scale, long-haul proxy, and runway pressure. Defaults are explicit when richer data is unavailable.
 
 Always show the full breakdown in answers, not just the final composite score.
 

@@ -1,4 +1,10 @@
-from scoring import calculate_scores, format_ranking, normalize, rank_airports
+from scoring import (
+    calculate_scores,
+    format_ranking,
+    get_congestion_score,
+    normalize,
+    rank_airports,
+)
 
 
 def test_calculate_scores_uses_required_weights():
@@ -22,9 +28,9 @@ def test_defaults_are_explicit_scoring_fallbacks():
     scores = calculate_scores({})
 
     assert scores == {
-        "composite": 34.7,
-        "congestion": 25.0,
-        "growth": 32.0,
+        "composite": 42.7,
+        "congestion": 35.0,
+        "growth": 47.1,
         "utilization": 45.5,
         "secondary": 50.0,
     }
@@ -66,12 +72,18 @@ def test_delay_score_takes_precedence_and_bad_inputs_clamp():
     )
 
     assert scores == {
-        "composite": 17.5,
-        "congestion": 50.0,
-        "growth": 0.0,
-        "utilization": 0.0,
-        "secondary": 0.0,
+        "composite": 41.0,
+        "congestion": 30.0,
+        "growth": 47.1,
+        "utilization": 45.5,
+        "secondary": 50.0,
     }
+
+
+def test_zero_live_delay_uses_airport_baseline_congestion():
+    assert get_congestion_score(0, "ATL") == 75.0
+    assert get_congestion_score(None, "ZZZ") == 35.0
+    assert get_congestion_score(45, "ZZZ") == 100.0
 
 
 def test_normalize_bounds():

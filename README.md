@@ -8,6 +8,7 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 
 - Rank US airports by expansion opportunity using a fixed scoring formula.
 - Compare any two airports on congestion, passenger growth, utilization, and composite score.
+- Use calibrated congestion baselines when the live FAA feed has no active delay advisories.
 - Estimate long-haul or international share with a labeled proxy table.
 - Answer follow-up questions through LangGraph conversation memory.
 - Record a voice question in Streamlit and transcribe it with Groq Whisper.

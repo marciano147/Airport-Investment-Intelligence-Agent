@@ -12,6 +12,39 @@ WEIGHTS = {
     "secondary": 0.10,
 }
 
+BASELINE_CONGESTION = {
+    "ATL": 75,
+    "ORD": 78,
+    "LAX": 72,
+    "DFW": 70,
+    "JFK": 80,
+    "EWR": 82,
+    "LGA": 85,
+    "SFO": 70,
+    "BOS": 68,
+    "MIA": 65,
+    "CLT": 60,
+    "DEN": 55,
+    "PHX": 50,
+    "IAH": 58,
+    "SEA": 55,
+    "MSP": 52,
+    "DTW": 55,
+    "PHL": 62,
+    "BWI": 45,
+    "MDW": 50,
+    "IAD": 58,
+    "FLL": 48,
+    "MCO": 45,
+    "LAS": 50,
+    "SAN": 40,
+    "SNA": 35,
+    "PDX": 38,
+    "AUS": 42,
+    "BNA": 40,
+    "DAL": 45,
+}
+
 
 def normalize(value: float, min_val: float = 0, max_val: float = 100) -> float:
     """Clamp and scale a value to 0-100."""
@@ -27,6 +60,25 @@ def normalize(value: float, min_val: float = 0, max_val: float = 100) -> float:
     return max(0.0, min(100.0, scaled))
 
 
+def _number_or_default(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def get_congestion_score(delay_minutes: Any, iata: str = "") -> float:
+    """Score congestion from live FAA delay plus a deterministic hub baseline."""
+    baseline = BASELINE_CONGESTION.get(iata.strip().upper(), 35)
+    delay = _number_or_default(delay_minutes, 0)
+    if delay <= 0:
+        return float(baseline)
+
+    live_score = normalize(delay, 0, 45)
+    blended = (baseline * 0.55) + (live_score * 0.45)
+    return max(float(baseline), live_score, blended)
+
+
 def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
     """Calculate deterministic component and composite scores.
 
@@ -36,18 +88,20 @@ def calculate_scores(airport: dict[str, Any]) -> dict[str, float]:
     - `utilization` on a 0-100 scale
     - `secondary` on a 0-100 scale
     """
-    delay = airport.get("delay_score")
-    if delay is None:
-        delay = airport.get("delay_minutes", 15)
-    congestion = normalize(delay, 0, 60)
+    iata = str(airport.get("iata", "") or "")
+    delay_score = airport.get("delay_score")
+    if delay_score is not None:
+        congestion = normalize(delay_score, 0, 100)
+    else:
+        congestion = get_congestion_score(airport.get("delay_minutes", 0), iata)
 
-    growth_pct = airport.get("yoy_growth", 3.0)
-    growth = normalize(growth_pct, -5, 20)
+    growth_pct = _number_or_default(airport.get("yoy_growth"), 3.0)
+    growth = normalize(growth_pct, -5, 12)
 
-    util = airport.get("utilization", 65)
+    util = _number_or_default(airport.get("utilization"), 65)
     utilization = normalize(util, 40, 95)
 
-    secondary_input = airport.get("secondary", 50)
+    secondary_input = _number_or_default(airport.get("secondary"), 50)
     secondary = normalize(secondary_input, 0, 100)
 
     composite = (

@@ -18,7 +18,7 @@ def test_compare_airports_returns_side_by_side_scores(monkeypatch):
     assert "Comparison: LAX vs SNA" in result
     assert "Composite score" in result
     assert "Long-haul proxy" in result
-    assert "100.0" in result
+    assert "Congestion score | 72.0 | 35.0" in result
     assert "Assumptions & Limitations" in result
 
 

@@ -15,9 +15,16 @@ from data_loader import (
     airport_by_iata,
     expansion_candidates,
     metrics_by_iata,
+    secondary_proxy_score,
+    utilization_proxy_score,
 )
 from long_haul import long_haul_estimate
-from scoring import calculate_scores, format_ranking, rank_airports
+from scoring import (
+    calculate_scores,
+    format_ranking,
+    get_congestion_score,
+    rank_airports,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -111,15 +118,11 @@ def _apply_pair_proxies(left: dict[str, Any], right: dict[str, Any]) -> None:
         float(right["enplanements_per_runway"]),
         1.0,
     )
-    max_enplanements = max(float(left["enplanements"]), float(right["enplanements"]), 1.0)
-
     for airport in (left, right):
-        airport["utilization"] = round(
-            (float(airport["enplanements_per_runway"]) / max_per_runway) * 100, 1
+        airport["utilization"] = utilization_proxy_score(
+            float(airport["enplanements_per_runway"]), max_per_runway
         )
-        airport["secondary"] = round(
-            (1 - (float(airport["enplanements"]) / max_enplanements)) * 100, 1
-        )
+        airport["secondary"] = secondary_proxy_score(airport)
 
 
 def _comparison_row(label: str, left: Any, right: Any) -> str:
@@ -164,12 +167,23 @@ def get_congestion(iata: str) -> dict[str, Any]:
         live_scores = _status_delay_scores()
         if normalized in live_scores:
             _log_tool_result("get_congestion", started, "ok")
-            return {"iata": normalized, **live_scores[normalized], "source": FAA_STATUS_URL}
+            live_status = live_scores[normalized]
+            return {
+                "iata": normalized,
+                **live_status,
+                "congestion_score": round(
+                    get_congestion_score(live_status.get("delay_minutes", 0), normalized),
+                    1,
+                ),
+                "source": FAA_STATUS_URL,
+            }
         _log_tool_result("get_congestion", started, "ok")
         return {
             "iata": normalized,
             "delay_minutes": 0,
+            "congestion_score": round(get_congestion_score(0, normalized), 1),
             "status": "No active FAA delay advisory in current feed",
+            "note": "Score uses deterministic baseline congestion because no live FAA advisory is active.",
             "source": FAA_STATUS_URL,
         }
     except Exception as exc:
@@ -178,6 +192,7 @@ def get_congestion(iata: str) -> dict[str, Any]:
         return {
             "iata": iata.strip().upper(),
             "delay_minutes": 0,
+            "congestion_score": round(get_congestion_score(0, iata), 1),
             "error": str(exc),
             "suggestion": "FAA status feed may be unavailable. Retry or inspect logs.",
         }
@@ -326,7 +341,8 @@ def rank_airports_for_expansion(region: str = "US", top_n: int = 5) -> str:
             f"{format_ranking(ranked)}\n\n"
             "Scores use the mandatory weighted formula: Congestion 35%, Growth 30%, "
             "Utilization 25%, Secondary 10%.\n\n"
-            "Assumptions & Limitations: FAA delay status is live where available. "
+            "Assumptions & Limitations: FAA delay status is live where available; "
+            "otherwise congestion uses deterministic hub baselines. "
             "Passenger metrics are cached from the FAA 2024 commercial-service workbook "
             "and lag official reporting. Utilization and secondary are transparent proxies."
         )

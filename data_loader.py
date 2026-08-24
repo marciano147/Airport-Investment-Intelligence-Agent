@@ -10,6 +10,8 @@ from typing import Any
 
 import requests
 
+from long_haul import long_haul_estimate
+
 
 logger = logging.getLogger(__name__)
 
@@ -271,18 +273,17 @@ def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, A
     max_enplanements_per_runway = max(
         _enplanements_per_runway(candidate) for candidate in candidates
     ) or 1
-    max_enplanements = max(candidate["enplanements"] for candidate in candidates) or 1
-
     for candidate in candidates:
         per_runway = _enplanements_per_runway(candidate)
-        utilization = (per_runway / max_enplanements_per_runway) * 100
-        secondary = (1 - (candidate["enplanements"] / max_enplanements)) * 100
         candidate["enplanements_per_runway"] = round(per_runway, 1)
-        candidate["utilization"] = round(utilization, 1)
-        candidate["secondary"] = round(secondary, 1)
+        candidate["utilization"] = utilization_proxy_score(
+            per_runway, max_enplanements_per_runway
+        )
+        candidate["secondary"] = secondary_proxy_score(candidate)
         candidate["proxy_notes"] = (
-            "Utilization uses 2024 enplanements per runway relative to the selected "
-            "region. Secondary is an inverse size proxy for non-dominant market opportunity."
+            "Utilization uses 2024 enplanements per runway relative to the selected region "
+            "with a cap below full saturation. Secondary combines airport scale, long-haul "
+            "proxy, and runway pressure."
         )
 
     return tuple(tuple(candidate.items()) for candidate in candidates)
@@ -291,6 +292,39 @@ def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, A
 def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
     """Return ranked-scope airports enriched with public metrics and proxies."""
     return [dict(candidate) for candidate in _expansion_candidates_cached(region)]
+
+
+def utilization_proxy_score(
+    enplanements_per_runway: float,
+    max_enplanements_per_runway: float,
+) -> float:
+    """Score runway pressure without letting the top peer saturate at 100."""
+    if max_enplanements_per_runway <= 0:
+        return 65.0
+    ratio = max(0.0, min(1.0, enplanements_per_runway / max_enplanements_per_runway))
+    return round(35 + (ratio * 57), 1)
+
+
+def secondary_proxy_score(candidate: dict[str, Any]) -> float:
+    """Score strategic context from scale, route mix, and runway pressure."""
+    enplanements = float(candidate.get("enplanements") or 0)
+    enplanements_per_runway = float(candidate.get("enplanements_per_runway") or 0)
+    estimate = long_haul_estimate(str(candidate.get("iata", ""))).get(
+        "long_haul_pct_estimate"
+    )
+    long_haul_pct = float(estimate) if estimate is not None else 12.0
+
+    long_haul_score = _normalize_value(long_haul_pct, 5, 45)
+    scale_score = _normalize_value(enplanements, 2_000_000, 45_000_000)
+    runway_pressure_score = _normalize_value(
+        enplanements_per_runway, 2_000_000, 10_000_000
+    )
+    score = (
+        long_haul_score * 0.45
+        + scale_score * 0.35
+        + runway_pressure_score * 0.20
+    )
+    return round(max(35.0, min(95.0, score)), 1)
 
 
 def cache_stats() -> dict[str, Any]:
@@ -320,3 +354,10 @@ def _enplanements_per_runway(candidate: dict[str, Any]) -> float:
     if runway_count <= 0:
         runway_count = 1
     return float(candidate["enplanements"]) / runway_count
+
+
+def _normalize_value(value: float, min_val: float, max_val: float) -> float:
+    if max_val == min_val:
+        return 50.0
+    scaled = (value - min_val) / (max_val - min_val) * 100
+    return max(0.0, min(100.0, scaled))
