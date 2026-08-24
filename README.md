@@ -26,6 +26,27 @@ The agent uses deterministic Python scoring for rankings and comparisons. The LL
 - Public aviation data from OurAirports, FAA passenger boarding data, and FAA NAS status
 - Pytest for deterministic scoring and tool tests
 
+## How it works
+
+The LLM does not rank airports. It routes the question, calls tools, and explains a Python score built from local CSV caches plus an optional live FAA NAS status lookup.
+
+```mermaid
+flowchart LR
+  U[User text or voice] --> S[Streamlit]
+  S --> W[Groq Whisper]
+  W --> S
+  S --> A[LangGraph agent]
+  A --> L[Groq or OpenRouter]
+  A --> T[Python tools]
+  T --> C[data/*.csv cache]
+  T --> N[FAA NAS live]
+  T --> P[Fixed scoring formula]
+  P --> A
+  A --> S
+```
+
+See `design.md` for scoring weights, data sources, and trade-offs.
+
 ## Setup
 
 This is a Python project. Do not run `npm i`.
