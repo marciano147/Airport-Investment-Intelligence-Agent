@@ -10,3 +10,4 @@ python-dotenv
 pytest
 requests
 streamlit
+streamlit-mic-recorder==0.0.8

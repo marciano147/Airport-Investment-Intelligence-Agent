@@ -28,15 +28,31 @@ def test_voice_transcript_path_does_not_force_immediate_rerun():
     assert risky_pattern not in source
 
 
-def test_voice_input_uses_stable_audio_widget_and_button():
+def test_voice_input_uses_dedicated_recorder_and_button():
     source = APP_PATH.read_text(encoding="utf-8")
 
-    assert 'st.form("voice_input_form", clear_on_submit=True)' not in source
-    assert "st.audio_input(" in source
-    assert 'st.button("Send Voice"' in source
-    assert "voice_slot.empty()" not in source
+    # Native Streamlit recorder caused the browser-side completion error.
+    assert "st.audio_input(" not in source
+
+    # Dedicated recorder should be used instead.
+    assert "from streamlit_mic_recorder import mic_recorder" in source
+    assert "mic_recorder(" in source
+
+    # WAV is sent directly to the existing Whisper pipeline.
+    assert 'format="wav"' in source
+    assert 'filename="question.wav"' in source
+
+    # Recording and submission remain separate actions.
+    assert 'st.button(' in source
+    assert '"Send Voice"' in source
+
+    # Existing voice diagnostics/reset lifecycle remain enabled.
     assert "_record_voice_event" in source
     assert "voice_reset_after_response" in source
+
+    # Do not bring the old form implementation back.
+    assert 'st.form("voice_input_form", clear_on_submit=True)' not in source
+    assert "voice_slot.empty()" not in source
 
 
 def test_chat_history_has_delete_control():

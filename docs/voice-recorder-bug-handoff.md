@@ -14,14 +14,16 @@ Voice UI lives in `app.py` inside `_render_voice_input()`.
 
 Current flow:
 
-1. `st.audio_input("Record a voice question")` records microphone audio.
+1. `streamlit_mic_recorder.mic_recorder(...)` records microphone audio.
 2. User clicks `Send Voice`.
-3. App reads `audio_data.getvalue()`.
+3. App reads WAV bytes from the recorder output dictionary.
 4. `voice_utils.transcribe_audio()` sends bytes to Groq Whisper.
 5. Transcript is queued as a normal chat prompt.
 6. Agent response is traced in LangSmith.
 
-The recorder is no longer inside `st.form`. It uses a stable `st.audio_input` widget and a separate `Send Voice` button.
+The app no longer uses native `st.audio_input`. It uses `streamlit-mic-recorder==0.0.8` with `format="wav"`, `just_once=False`, and a separate `Send Voice` button.
+
+The app marks `last_audio_hash` only after transcription succeeds. That allows a failed transcription to be retried with the same recording.
 
 ## Debugging Added
 
@@ -46,17 +48,17 @@ Voice events currently logged:
 
 Important interpretation:
 
-- If the browser shows the recorder error and no `transcription_started` event appears, Python never received usable audio. That points to Streamlit recorder/upload/browser behavior.
+- If the browser shows the recorder error and no `transcription_started` event appears, Python never received usable audio. That points to the recorder component, browser microphone state, or network/upload behavior.
 - If `transcription_started` appears and then `transcription_failed`, inspect the Groq Whisper error.
 - LangSmith starts at the agent call. It will not show recorder frontend failures unless a transcript reaches the agent.
 
 ## Most Likely Causes
 
-1. Streamlit `st.audio_input` frontend/upload bug in this browser or Streamlit version.
-2. Widget remount/rerun timing after recording completes.
-3. Browser microphone/media permission state.
+1. Browser microphone/media permission state.
+2. Custom recorder component upload/event issue.
+3. Widget remount/rerun timing after recording completes.
 4. Local browser cache holding an older Streamlit widget bundle.
-5. Audio upload failure before Python receives the `UploadedFile`.
+5. Audio upload failure before Python receives WAV bytes.
 
 ## Reproduction Steps
 
@@ -69,7 +71,7 @@ streamlit run app.py
 2. Open the local URL in a browser.
 3. In the sidebar, record a short voice note.
 4. Stop recording.
-5. Observe whether the recorder shows the error before clicking `Send Voice`.
+5. Observe whether the recorder shows an error before clicking `Send Voice`.
 6. Enable `Show debug info` and check `Recent voice events`.
 7. In another terminal, watch:
 
@@ -100,7 +102,7 @@ Recommended next attempts:
 2. Test in Chrome with microphone permission reset.
 3. Pin or upgrade Streamlit if the issue is version-specific.
 4. Add an upload-audio fallback path using `st.file_uploader`.
-5. Replace `st.audio_input` with a dedicated recorder component if native Streamlit keeps failing.
+5. Try an alternate recorder package such as `audio-recorder-streamlit` if the custom component fails in the target browser.
 
 ## Current Verification
 

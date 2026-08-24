@@ -11,6 +11,7 @@ from time import strftime
 from typing import Any
 
 import streamlit as st
+from streamlit_mic_recorder import mic_recorder
 
 from agent import invoke_agent_messages, response_content
 from chat_store import (
@@ -167,37 +168,46 @@ def _render_voice_input() -> None:
         else:
             voice_status_slot.error(status_message)
 
-    # Keep the recorder outside `st.form`. The audio widget has its own stop and
-    # upload lifecycle, and batching it inside a form can leave the frontend in a
-    # transient error state after recording stops.
-    audio_data = st.audio_input(
-        "Record a voice question",
+    # Native `st.audio_input` can enter a browser-side error state when
+    # MediaRecorder stops. This component returns WAV bytes directly and keeps
+    # recording separate from the explicit Send Voice action.
+    recorder_output = mic_recorder(
+        start_prompt="Start recording",
+        stop_prompt="Stop recording",
+        just_once=False,
+        use_container_width=True,
+        format="wav",
         key=f"voice_input_{st.session_state.voice_input_version}",
     )
+    audio_bytes = None
+    if isinstance(recorder_output, dict):
+        audio_bytes = recorder_output.get("bytes")
+
     send_voice = st.button("Send Voice", use_container_width=True, key="send_voice")
 
     if not send_voice:
         return
 
-    if audio_data is None:
+    if not audio_bytes:
         message = "Record a voice question before sending."
         st.session_state.voice_status = ("error", message)
         _record_voice_event("submit_without_audio")
         voice_status_slot.error(message)
         return
 
-    audio_bytes = audio_data.getvalue()
     audio_hash = hashlib.sha256(audio_bytes).hexdigest()
     if audio_hash == st.session_state.last_audio_hash:
         _record_voice_event("duplicate_audio_ignored", hash=audio_hash[:12])
         return
 
-    st.session_state.last_audio_hash = audio_hash
     _record_voice_event("transcription_started", bytes=len(audio_bytes), hash=audio_hash[:12])
     with st.spinner("Transcribing with Groq Whisper..."):
-        transcript = transcribe_audio(audio_bytes)
+        transcript = transcribe_audio(audio_bytes, filename="question.wav")
 
     if transcription_succeeded(transcript):
+        # Mark the audio as processed only after Whisper succeeds. Failed
+        # transcriptions can be retried with the same recording.
+        st.session_state.last_audio_hash = audio_hash
         # Reset the recorder only after the assistant response is saved. Resetting
         # during recorder completion can produce Streamlit's transient audio error.
         st.session_state.voice_input_version += 1
