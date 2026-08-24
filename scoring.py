@@ -1,4 +1,4 @@
-"""Deterministic airport expansion scoring."""
+"""Compute layer: deterministic airport expansion scoring."""
 
 from __future__ import annotations
 

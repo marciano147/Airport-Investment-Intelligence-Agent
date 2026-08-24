@@ -1,4 +1,4 @@
-"""LangGraph agent wiring."""
+"""LLM layer: question routing, tool selection, and response synthesis."""
 
 from __future__ import annotations
 

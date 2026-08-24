@@ -28,6 +28,11 @@ Main files:
 - `voice_utils.py`: Groq Whisper transcription helper for recorded questions.
 - `context/*.md`: Hermes-style prompt context for role, tools, scoring, assumptions, and answer style.
 
+The architecture has two explicit layers:
+
+- LLM layer: `agent.py` interprets the analyst request, selects tools, keeps conversation context, and explains results.
+- Compute layer: `tools.py`, `data_loader.py`, and `scoring.py` fetch/cache data, apply deterministic formulas, and return numeric outputs.
+
 The LLM does not calculate rankings. It chooses tools and explains their outputs.
 
 ## Scoring Methodology
@@ -82,6 +87,8 @@ Deterministic code is used for:
 ## Monitoring and Debugging
 
 - Tool failures are logged with Python logging.
+- Tool calls log status and duration so slow data sources are visible during review.
+- Cached airport, enplanement, region, candidate, and FAA status lookups reduce repeated compute-layer work.
 - Tools return structured error payloads or fallback notes instead of failing silently.
 - Streamlit can show raw agent responses in the debug panel.
 - LangGraph memory uses a thread ID per Streamlit conversation.

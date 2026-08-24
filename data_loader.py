@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -157,37 +158,54 @@ def download_ourairports() -> None:
     _write_csv(RUNWAYS_CACHE, sorted(runway_rows, key=lambda item: item["iata"]), runway_fields)
 
 
+@lru_cache(maxsize=1)
+def _load_airports_cached() -> tuple[dict[str, str], ...]:
+    download_ourairports()
+    return tuple(_read_csv(AIRPORTS_CACHE))
+
+
 def load_airports(refresh: bool = False) -> list[dict[str, Any]]:
     if refresh:
         AIRPORTS_CACHE.unlink(missing_ok=True)
         RUNWAYS_CACHE.unlink(missing_ok=True)
-    download_ourairports()
-    return _read_csv(AIRPORTS_CACHE)
+        _load_airports_cached.cache_clear()
+        _airport_by_iata_cached.cache_clear()
+        _airports_for_region_cached.cache_clear()
+        _expansion_candidates_cached.cache_clear()
+    return [dict(row) for row in _load_airports_cached()]
+
+
+@lru_cache(maxsize=1)
+def _load_enplanements_cached() -> tuple[dict[str, str], ...]:
+    return tuple(_read_csv(ENPLANEMENTS_CACHE))
 
 
 def load_enplanements() -> list[dict[str, Any]]:
-    return _read_csv(ENPLANEMENTS_CACHE)
+    return [dict(row) for row in _load_enplanements_cached()]
 
 
-def airport_by_iata(iata: str) -> dict[str, Any] | None:
+@lru_cache(maxsize=1024)
+def _airport_by_iata_cached(iata: str) -> tuple[tuple[str, Any], ...] | None:
     normalized = iata.strip().upper()
     for airport in load_airports():
         if airport.get("iata") == normalized:
-            return {
+            hydrated = {
                 **airport,
                 "runway_count": int(float(airport.get("runway_count") or 0)),
                 "longest_runway_ft": int(
                     float(airport.get("longest_runway_ft") or 0)
                 ),
             }
+            return tuple(hydrated.items())
     return None
 
 
-def metrics_by_iata(iata: str) -> dict[str, Any] | None:
+@lru_cache(maxsize=1024)
+def _metrics_by_iata_cached(iata: str) -> tuple[tuple[str, Any], ...] | None:
     normalized = iata.strip().upper()
     for row in load_enplanements():
         if row.get("iata") == normalized:
-            return {
+            hydrated = {
                 **row,
                 "year": int(float(row.get("year", 0) or 0)),
                 "enplanements": int(float(row.get("enplanements", 0) or 0)),
@@ -196,14 +214,25 @@ def metrics_by_iata(iata: str) -> dict[str, Any] | None:
                 ),
                 "yoy_growth": float(row.get("yoy_growth", 0) or 0),
             }
+            return tuple(hydrated.items())
     return None
 
 
-def get_airports_for_region(region: str = "US") -> list[str]:
-    """Return major IATA codes for a requested prototype region."""
+def airport_by_iata(iata: str) -> dict[str, Any] | None:
+    cached = _airport_by_iata_cached(iata)
+    return dict(cached) if cached else None
+
+
+def metrics_by_iata(iata: str) -> dict[str, Any] | None:
+    cached = _metrics_by_iata_cached(iata)
+    return dict(cached) if cached else None
+
+
+@lru_cache(maxsize=256)
+def _airports_for_region_cached(region: str = "US") -> tuple[str, ...]:
     normalized = region.lower().strip()
     if normalized in REGION_MAP:
-        return REGION_MAP[normalized]
+        return tuple(REGION_MAP[normalized])
 
     if len(normalized) == 2:
         state = normalized.upper()
@@ -217,13 +246,18 @@ def get_airports_for_region(region: str = "US") -> list[str]:
             key=lambda row: int(float(row.get("enplanements") or 0)),
             reverse=True,
         )
-        return [row["iata"] for row in ranked[:20]]
+        return tuple(row["iata"] for row in ranked[:20])
 
-    return MAJOR_US_AIRPORTS
+    return tuple(MAJOR_US_AIRPORTS)
 
 
-def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
-    """Return ranked-scope airports enriched with public metrics and proxies."""
+def get_airports_for_region(region: str = "US") -> list[str]:
+    """Return major IATA codes for a requested prototype region."""
+    return list(_airports_for_region_cached(region))
+
+
+@lru_cache(maxsize=256)
+def _expansion_candidates_cached(region: str = "US") -> tuple[tuple[tuple[str, Any], ...], ...]:
     candidates: list[dict[str, Any]] = []
     for iata in get_airports_for_region(region):
         airport = airport_by_iata(iata)
@@ -232,7 +266,7 @@ def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
             candidates.append({**airport, **metrics})
 
     if not candidates:
-        return []
+        return tuple()
 
     max_enplanements_per_runway = max(
         _enplanements_per_runway(candidate) for candidate in candidates
@@ -251,7 +285,34 @@ def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
             "region. Secondary is an inverse size proxy for non-dominant market opportunity."
         )
 
-    return candidates
+    return tuple(tuple(candidate.items()) for candidate in candidates)
+
+
+def expansion_candidates(region: str = "US") -> list[dict[str, Any]]:
+    """Return ranked-scope airports enriched with public metrics and proxies."""
+    return [dict(candidate) for candidate in _expansion_candidates_cached(region)]
+
+
+def cache_stats() -> dict[str, Any]:
+    """Expose compute-layer cache stats for debugging and interviews."""
+    return {
+        "load_airports": _load_airports_cached.cache_info()._asdict(),
+        "load_enplanements": _load_enplanements_cached.cache_info()._asdict(),
+        "airport_by_iata": _airport_by_iata_cached.cache_info()._asdict(),
+        "metrics_by_iata": _metrics_by_iata_cached.cache_info()._asdict(),
+        "get_airports_for_region": _airports_for_region_cached.cache_info()._asdict(),
+        "expansion_candidates": _expansion_candidates_cached.cache_info()._asdict(),
+    }
+
+
+def clear_caches() -> None:
+    """Clear all compute-layer caches."""
+    _load_airports_cached.cache_clear()
+    _load_enplanements_cached.cache_clear()
+    _airport_by_iata_cached.cache_clear()
+    _metrics_by_iata_cached.cache_clear()
+    _airports_for_region_cached.cache_clear()
+    _expansion_candidates_cached.cache_clear()
 
 
 def _enplanements_per_runway(candidate: dict[str, Any]) -> float:

@@ -24,6 +24,7 @@
 - [x] Add tests for scoring and data assembly.
 - [x] Add CI-safe tests for tools, prompts, voice, app render, and edge cases.
 - [x] Add opt-in live smoke script for Groq, Whisper, LangSmith, and Streamlit.
+- [x] Add compute-layer caches and tool timing logs.
 
 ## Verification
 

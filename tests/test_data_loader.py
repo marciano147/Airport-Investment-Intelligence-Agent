@@ -1,7 +1,10 @@
 from data_loader import (
     airport_by_iata,
+    cache_stats,
+    clear_caches,
     expansion_candidates,
     get_airports_for_region,
+    load_airports,
     metrics_by_iata,
 )
 
@@ -62,6 +65,7 @@ def test_expansion_candidates_add_deterministic_proxies():
 
 
 def test_expansion_candidates_falls_back_when_runway_count_is_zero(monkeypatch):
+    clear_caches()
     monkeypatch.setattr("data_loader.get_airports_for_region", lambda region: ["AAA"])
     monkeypatch.setattr(
         "data_loader.airport_by_iata",
@@ -86,3 +90,18 @@ def test_expansion_candidates_falls_back_when_runway_count_is_zero(monkeypatch):
 
     assert candidate["enplanements_per_runway"] == 1000.0
     assert candidate["utilization"] == 100.0
+    clear_caches()
+
+
+def test_data_loader_cache_stats_track_repeated_lookup():
+    clear_caches()
+
+    first = airport_by_iata("BOS")
+    second = airport_by_iata("BOS")
+    load_airports()
+    load_airports()
+    stats = cache_stats()
+
+    assert first == second
+    assert stats["airport_by_iata"]["hits"] >= 1
+    assert stats["load_airports"]["hits"] >= 1
