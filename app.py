@@ -377,7 +377,7 @@ if st.session_state.messages and st.session_state.messages[-1]["role"] == "user"
                 )
                 logger.info(
                     "agent_request provider=%s model=%s messages=%s replay_mode=%s",
-                    st.session_state.last_request_diagnostics["provider"],
+                    st.session_state.last_request_diagnostics["active_provider"],
                     st.session_state.last_request_diagnostics["model"],
                     len(input_messages),
                     replay_mode,

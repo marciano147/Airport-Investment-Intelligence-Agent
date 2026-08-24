@@ -77,6 +77,8 @@ def test_app_records_request_diagnostics_and_formats_agent_errors():
 
     assert "provider_diagnostics(" in source
     assert "last_request_diagnostics" in source
+    assert '["active_provider"]' in source
+    assert '["provider"]' not in source
     assert "format_agent_error(exc)" in source
     assert 'replay_mode = "full_saved_history"' in source
     assert 'replay_mode = "latest_turn_after_restore"' in source
