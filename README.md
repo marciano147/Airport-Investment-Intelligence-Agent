@@ -74,17 +74,15 @@ Python 3.11+ (3.12 works).
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env        # then set GROQ_API_KEY
 streamlit run app.py
 ```
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`. On Windows Git Bash, use `source .venv/Scripts/activate`.
+Create a Groq key at https://console.groq.com/keys. Optional OpenRouter fallback and LangSmith fields are in `.env.example`.
 
-Set `GROQ_API_KEY` in `.env`. Create a key at https://console.groq.com/keys. Optional OpenRouter fallback and LangSmith fields are documented in `.env.example`.
-
-Voice input is in the sidebar: Record, then Stop & send. Chat history is stored locally in `data/chat_history.db`.
+Voice input is in the sidebar: Record, then Stop & send. Chat history is stored locally in `data/chat_history.db` and is not part of the submission.
 
 ## Tests
 
